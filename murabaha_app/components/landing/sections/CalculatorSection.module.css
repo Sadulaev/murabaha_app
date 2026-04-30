@@ -1,0 +1,522 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding:
+    calc(env(safe-area-inset-top) + 5.8rem)
+    clamp(1.15rem, 3vw, 3.2rem)
+    calc(env(safe-area-inset-bottom) + 3.8rem);
+  background:
+    radial-gradient(circle at 12% 20%, rgba(255, 216, 108, 0.12), transparent 24%),
+    radial-gradient(circle at 84% 18%, rgba(239, 111, 77, 0.18), transparent 28%),
+    linear-gradient(135deg, #07111f 0%, #10233f 58%, #183056 100%);
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
+  gap: clamp(1rem, 3vw, 2.25rem);
+  width: 100%;
+  height: 100%;
+  align-items: stretch;
+  overflow: hidden;
+  transition:
+    grid-template-columns 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    gap 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.shellExpanded {
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: minmax(0, 0fr) minmax(0, 1fr);
+  gap: 0;
+  align-items: stretch;
+}
+
+.formColumn,
+.resultColumn {
+  min-width: 0;
+}
+
+.formColumn {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.8rem, 2vw, 1.3rem);
+  overflow: hidden;
+  transform: translateX(0);
+  opacity: 1;
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 260ms ease;
+}
+
+.shellExpanded .formColumn {
+  transform: translateX(calc(-100% - clamp(1rem, 3vw, 2.25rem)));
+  opacity: 0;
+  pointer-events: none;
+}
+
+.resultColumn {
+  height: 100%;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.resultColumnExpanded {
+  transform: translateX(0);
+}
+
+.eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.48rem 0.84rem;
+  background: rgba(255, 248, 239, 0.08);
+  color: var(--ember-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  /* max-width: 12ch; */
+  color: var(--paper-strong);
+  font-size: clamp(2.4rem, 5vw, 2.8rem);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+
+.description {
+  margin: 0;
+  max-width: 34rem;
+  color: rgba(255, 248, 239, 0.72);
+  font-size: clamp(1rem, 1.7vw, 1.28rem);
+  line-height: 1.45;
+}
+
+.formPanel {
+  display: grid;
+  gap: 0.95rem;
+  border: 1px solid rgba(255, 248, 239, 0.08);
+  border-radius: 2rem;
+  padding: clamp(1rem, 2vw, 1.35rem);
+  background: rgba(8, 17, 31, 0.56);
+  box-shadow: var(--shadow-strong);
+}
+
+.field {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.fieldLabel {
+  color: rgba(255, 248, 239, 0.84);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.inputRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid rgba(255, 248, 239, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 0.88rem 1rem;
+  background: rgba(255, 248, 239, 0.04);
+}
+
+.inputRow input {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--paper-strong);
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  font-weight: 700;
+  outline: none;
+}
+
+.inputRow span {
+  color: rgba(255, 248, 239, 0.58);
+  font-size: 0.95rem;
+}
+
+.range {
+  width: 100%;
+  appearance: none;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(154, 208, 202, 0.34) 0%, rgba(239, 111, 77, 0.92) 100%);
+  outline: none;
+}
+
+.range::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--paper-strong);
+  box-shadow: 0 0 0 6px rgba(255, 216, 108, 0.18);
+}
+
+.range::-moz-range-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--paper-strong);
+  box-shadow: 0 0 0 6px rgba(255, 216, 108, 0.18);
+}
+
+.fieldMeta {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255, 248, 239, 0.48);
+  font-size: 0.82rem;
+}
+
+.resultCard {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 2rem;
+  padding: 0;
+  background: linear-gradient(160deg, rgba(245, 236, 223, 0.96) 0%, rgba(255, 248, 239, 1) 100%);
+  color: var(--ink);
+  box-shadow: var(--shadow-strong);
+  transition: border-radius 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.resultCardExpanded {
+  height: 100%;
+  border-radius: 2.2rem;
+}
+
+.resultHeader {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.resultLabel {
+  color: rgba(11, 20, 37, 0.62);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.resultValue {
+  font-size: clamp(2.2rem, 5vw, 4.6rem);
+  line-height: 0.94;
+  letter-spacing: -0.05em;
+}
+
+.resultGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.summaryCard {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid rgba(11, 20, 37, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  background: rgba(11, 20, 37, 0.04);
+}
+
+.summaryCard span,
+.selectionList span,
+.note {
+  color: rgba(11, 20, 37, 0.62);
+}
+
+.summaryCard strong,
+.selectionList strong {
+  font-size: 1.06rem;
+}
+
+.selectionList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.selectionList div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(11, 20, 37, 0.08);
+  padding-bottom: 0.75rem;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.48;
+}
+
+.primaryButton {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.95rem 1.3rem;
+  background: var(--ember);
+  color: var(--paper-strong);
+  font-weight: 700;
+}
+
+.actionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+}
+
+.secondaryButton {
+  border: 1px solid rgba(11, 20, 37, 0.12);
+  border-radius: 999px;
+  padding: 0.95rem 1.1rem;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  .shell {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 0.9rem;
+  }
+
+  .title {
+    max-width: 10ch;
+    font-size: clamp(2.1rem, 5vw, 4.6rem);
+  }
+
+  .description {
+    font-size: 0.98rem;
+  }
+
+  .formPanel {
+    padding: 1rem;
+  }
+
+  .resultValue {
+    font-size: clamp(2rem, 4.4vw, 3.6rem);
+  }
+}
+
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: 1fr;
+    align-items: start; /* revert stretch — stacked layout, natural height */
+  }
+
+  .shellExpanded {
+    grid-template-columns: 1fr;
+  }
+
+  .shellExpanded .formColumn {
+    display: none;
+  }
+
+  .title,
+  .description {
+    max-width: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .section {
+    padding-top: calc(env(safe-area-inset-top) + 4.8rem);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 4.3rem);
+  }
+
+  .shell {
+    gap: 0.8rem;
+  }
+
+  .resultGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .selectionList div {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .primaryButton {
+    width: 100%;
+  }
+
+  .actionRow {
+    grid-template-columns: 1fr;
+  }
+
+  .secondaryButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 740px) {
+  .section {
+    height: auto;
+    min-height: 100svh;
+  }
+
+  .shell {
+    overflow: visible;
+    height: auto;
+  }
+
+  .resultColumn {
+    height: auto;
+  }
+
+  .resultCard {
+    min-height: 400px;
+  }
+}
+
+@media (max-height: 860px) {
+  .section {
+    padding-top: calc(env(safe-area-inset-top) + 4.7rem);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 2.6rem);
+  }
+
+  .shell {
+    align-items: stretch;
+    gap: 0.8rem;
+  }
+
+  .formColumn,
+  .resultCard,
+  .formPanel,
+  .selectionList {
+    gap: 0.65rem;
+  }
+
+  .title {
+    font-size: clamp(1.95rem, 4.5vw, 3.9rem);
+  }
+
+  .description,
+  .note,
+  .fieldLabel,
+  .fieldMeta {
+    font-size: 0.86rem;
+  }
+
+  .formPanel,
+  .resultCard,
+  .summaryCard {
+    padding: 0.9rem;
+  }
+
+  .inputRow {
+    padding: 0.72rem 0.9rem;
+  }
+
+  .selectionList div {
+    padding-bottom: 0.55rem;
+  }
+
+  .primaryButton {
+    padding: 0.82rem 1.15rem;
+  }
+}
+
+@media (max-height: 760px) {
+  .section {
+    padding-top: calc(env(safe-area-inset-top) + 4.4rem);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 2rem);
+  }
+
+  .title {
+    font-size: clamp(1.85rem, 4vw, 3.3rem);
+  }
+
+  .inputRow input {
+    font-size: 1rem;
+  }
+
+  .resultValue {
+    font-size: clamp(1.85rem, 4vw, 3rem);
+  }
+}
+
+/* ── Phone: fit entire calculator in one screen ── */
+@media (max-width: 640px) {
+  .section {
+    padding-top: calc(env(safe-area-inset-top) + 3.5rem);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+    justify-content: flex-start;
+  }
+
+  .shell {
+    gap: 0.55rem;
+  }
+
+  /* Hide decorative eyebrow to save height */
+  .eyebrow {
+    display: none;
+  }
+
+  .title {
+    font-size: 1.35rem;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  .formPanel {
+    gap: 0.45rem;
+    padding: 0.7rem;
+    border-radius: 1.4rem;
+  }
+
+  .field {
+    gap: 0.28rem;
+  }
+
+  .fieldLabel {
+    font-size: 0.78rem;
+  }
+
+  .inputRow {
+    padding: 0.5rem 0.7rem;
+    border-radius: 1rem;
+  }
+
+  .inputRow input {
+    font-size: 0.97rem;
+  }
+
+  .inputRow span {
+    font-size: 0.8rem;
+  }
+
+  .range {
+    height: 0.3rem;
+  }
+
+  .range::-webkit-slider-thumb {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .range::-moz-range-thumb {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .fieldMeta {
+    font-size: 0.68rem;
+  }
+
+  .resultCard,
+  .resultCardExpanded {
+    border-radius: 1.4rem;
+  }
+}

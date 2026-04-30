@@ -1,0 +1,252 @@
+.section {
+  width: 100%;
+  height: 100%;
+  padding:
+    calc(env(safe-area-inset-top) + 5.8rem)
+    clamp(1.15rem, 3vw, 3.2rem)
+    calc(env(safe-area-inset-bottom) + 3.8rem);
+  background:
+    radial-gradient(circle at 14% 18%, rgba(239, 111, 77, 0.24), transparent 28%),
+    radial-gradient(circle at 90% 12%, rgba(11, 20, 37, 0.12), transparent 22%),
+    linear-gradient(135deg, #f5ecdf 0%, #f0e4d3 48%, #efe1cb 100%);
+  color: var(--ink);
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(1rem, 3vw, 2.5rem);
+  width: 100%;
+  height: 100%;
+  align-items: stretch;
+}
+
+.copyColumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(0.85rem, 2vw, 1.4rem);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  background: rgba(11, 20, 37, 0.08);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  max-width: 14ch;
+  font-size: clamp(2.6rem, 7vw, 7rem);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+}
+
+.description {
+  margin: 0;
+  max-width: 34rem;
+  color: rgba(11, 20, 37, 0.8);
+  font-size: clamp(1rem, 1.7vw, 1.35rem);
+  line-height: 1.42;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border: 1px solid rgba(11, 20, 37, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.05rem;
+  background: rgba(255, 248, 239, 0.56);
+  box-shadow: var(--shadow);
+}
+
+.metricValue {
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 700;
+}
+
+.metricLabel {
+  color: rgba(11, 20, 37, 0.62);
+  font-size: 0.9rem;
+}
+
+.primaryButton {
+  width: fit-content;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.95rem 1.4rem;
+  background: var(--ink);
+  color: var(--paper-strong);
+  font-weight: 700;
+  box-shadow: var(--shadow-strong);
+}
+
+.cardsColumn {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  min-height: 0;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  align-content: center;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 11rem;
+  border-radius: var(--radius-xl);
+  padding: 1.2rem;
+  background: rgba(11, 20, 37, 0.92);
+  color: var(--paper-strong);
+  box-shadow: var(--shadow-strong);
+}
+
+.cardIndex {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: rgba(255, 248, 239, 0.28);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.cardTitle {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.05rem, 2vw, 1.55rem);
+  line-height: 1.05;
+}
+
+.cardText {
+  margin: 0;
+  color: rgba(255, 248, 239, 0.72);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.advantageStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.advantageChip {
+  border: 1px solid rgba(11, 20, 37, 0.1);
+  border-radius: 999px;
+  padding: 0.7rem 0.9rem;
+  background: rgba(255, 248, 239, 0.56);
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
+@media (max-width: 740px) {
+  .section {
+    height: auto;
+    min-height: 100svh;
+  }
+
+  .shell {
+    height: auto;
+  }
+}
+
+@media (max-width: 960px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .title,
+  .description {
+    max-width: none;
+  }
+
+  .cardsColumn {
+    grid-template-rows: auto auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .section {
+    padding-top: calc(env(safe-area-inset-top) + 4.8rem);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 4.3rem);
+  }
+
+  .metrics,
+  .cardsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metrics {
+    gap: 0.65rem;
+  }
+
+  .metricCard,
+  .card {
+    min-height: auto;
+    padding: 0.95rem;
+  }
+
+  .primaryButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .cardsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cardTitle {
+    font-size: 1rem;
+  }
+
+  .cardText,
+  .advantageChip,
+  .metricLabel {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-height: 760px) {
+  .section {
+    padding-top: calc(env(safe-area-inset-top) + 4.8rem);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 3.3rem);
+  }
+
+  .shell,
+  .copyColumn {
+    gap: 0.8rem;
+  }
+
+  .title {
+    font-size: clamp(2.25rem, 5vw, 4.4rem);
+  }
+
+  .description {
+    font-size: 0.96rem;
+  }
+}

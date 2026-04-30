@@ -1,0 +1,34 @@
+.badge {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-right: 1px solid rgba(11, 20, 37, 0.11);
+  border-bottom: 1px solid rgba(11, 20, 37, 0.11);
+  border-radius: 0 0 0.9rem 0;
+  padding: 0.55rem 0.9rem;
+  background: rgba(255, 248, 239, 0.94);
+  backdrop-filter: blur(14px);
+  box-shadow: 4px 4px 18px rgba(3, 10, 22, 0.1);
+  cursor: pointer;
+}
+
+.badge img {
+  display: block;
+  width: 100px;
+  height: auto;
+}
+
+@media (max-width: 720px) {
+  .badge {
+    padding: 0.45rem 0.75rem;
+  }
+
+  .badge img {
+    width: 82px;
+  }
+}

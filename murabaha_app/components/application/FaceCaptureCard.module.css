@@ -1,0 +1,305 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(11, 20, 37, 0.1);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.52);
+  overflow: hidden;
+}
+
+/* ── Camera / Preview area ── */
+
+.cameraWrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: #07111f;
+  overflow: hidden;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror for selfie */
+}
+
+.canvas {
+  display: none;
+}
+
+/* Face frame overlay */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.faceFrame {
+  position: relative;
+  width: 42%;
+  aspect-ratio: 3 / 4;
+  border-radius: 50% / 45%;
+  box-shadow: 0 0 0 9999px rgba(7, 17, 31, 0.45);
+}
+
+.faceFrameAnalyzing {
+  animation: pulse 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  from { box-shadow: 0 0 0 9999px rgba(7, 17, 31, 0.45), 0 0 0 2px rgba(99, 216, 171, 0.5); }
+  to   { box-shadow: 0 0 0 9999px rgba(7, 17, 31, 0.45), 0 0 0 4px rgba(99, 216, 171, 0.9); }
+}
+
+/* Corner brackets */
+
+.corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(99, 216, 171, 0.9);
+  border-style: solid;
+}
+
+.cornerTL {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+  border-radius: 3px 0 0 0;
+}
+
+.cornerTR {
+  top: -1px;
+  right: -1px;
+  border-width: 2px 2px 0 0;
+  border-radius: 0 3px 0 0;
+}
+
+.cornerBL {
+  bottom: -1px;
+  left: -1px;
+  border-width: 0 0 2px 2px;
+  border-radius: 0 0 0 3px;
+}
+
+.cornerBR {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 2px 2px 0;
+  border-radius: 0 0 3px 0;
+}
+
+/* Scan line animation */
+
+.scanLine {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(99, 216, 171, 0.9), transparent);
+  animation: scan 1.2s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0%   { top: 5%; opacity: 0.9; }
+  50%  { opacity: 1; }
+  100% { top: 90%; opacity: 0.9; }
+}
+
+/* Status bar at bottom of camera */
+
+.statusBar {
+  position: absolute;
+  bottom: 0;
+  inset-inline: 0;
+  padding: 0.55rem 0.75rem;
+  background: linear-gradient(to top, rgba(7,17,31,0.72), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statusText {
+  color: rgba(255, 248, 239, 0.88);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.statusAnalyzing {
+  color: rgba(99, 216, 171, 0.95);
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* Capture button */
+
+.captureBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  align-self: center;
+  margin: 0.6rem auto;
+  border: 3px solid rgba(11, 20, 37, 0.22);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.captureBtn:active {
+  transform: scale(0.92);
+}
+
+.captureDot {
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background: var(--ink, #0b1425);
+}
+
+/* ── Preview state ── */
+
+.previewWrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.previewBadge {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem 0.3rem 0.3rem;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1f7255;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(7, 17, 31, 0.18);
+}
+
+.badgeCheck {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.cardTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink, #0b1425);
+}
+
+.retakeBtn {
+  border: 1px solid rgba(11, 20, 37, 0.12);
+  border-radius: 999px;
+  padding: 0.32rem 0.65rem;
+  background: transparent;
+  color: var(--ink, #0b1425);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── Idle state ── */
+
+.idleState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 1.4rem 1rem;
+  text-align: center;
+}
+
+.cameraIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: rgba(11, 20, 37, 0.38);
+}
+
+.cameraIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.idleTitle {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.idleDesc {
+  color: rgba(11, 20, 37, 0.52);
+  font-size: 0.72rem;
+}
+
+/* ── Error state ── */
+
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.2rem 1rem;
+  text-align: center;
+}
+
+.errorIcon {
+  font-size: 1.5rem;
+  color: #c93f2d;
+}
+
+.errorText {
+  margin: 0;
+  color: #c93f2d;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+/* ── Shared button ── */
+
+.startBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.48rem 0.9rem;
+  background: var(--ink, #0b1425);
+  color: #fff8ef;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}

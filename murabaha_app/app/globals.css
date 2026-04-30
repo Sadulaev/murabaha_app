@@ -1,0 +1,97 @@
+:root {
+  --ink: #0b1425;
+  --ink-soft: #1a2940;
+  --paper: #f5ecdf;
+  --paper-strong: #fff8ef;
+  --mist: #d3efe8;
+  --mist-strong: #9ad0ca;
+  --ember: #ef6f4d;
+  --ember-soft: #ffc3ad;
+  --sun: #ffd86c;
+  --line: rgba(11, 20, 37, 0.14);
+  --line-dark: rgba(255, 248, 239, 0.18);
+  --shadow: 0 24px 60px rgba(10, 18, 35, 0.18);
+  --shadow-strong: 0 30px 70px rgba(3, 10, 22, 0.35);
+  --radius-xl: 32px;
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --font-sans: "Exo2", "Segoe UI", sans-serif;
+}
+
+@font-face {
+  font-family: "Exo2";
+  src: url("/fonts/Exo2-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Exo2";
+  src: url("/fonts/Exo2-SemiBold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Exo2";
+  src: url("/fonts/Exo2-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--ink);
+  color: var(--paper-strong);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+input::-webkit-inner-spin-button,
+input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  appearance: textfield;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

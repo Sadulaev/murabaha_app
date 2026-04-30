@@ -1,0 +1,19 @@
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 560ms ease,
+    transform 560ms ease;
+  will-change: opacity, transform;
+}
+
+.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 740px) {
+  .reveal {
+    transition-delay: 0ms !important;
+  }
+}
