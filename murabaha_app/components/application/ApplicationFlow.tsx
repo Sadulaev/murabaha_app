@@ -430,7 +430,7 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
       </div>
 
       <div className={styles.footer}>
-        <span className={styles.helper}>Фото сохраняются локально, заявка пишется в базу.</span>
+        <span className={styles.helper}>Ваши данные защищены и используются только для оформления заявки</span>
 
         <div className={styles.footerActions}>
           {step === 1 ? (
