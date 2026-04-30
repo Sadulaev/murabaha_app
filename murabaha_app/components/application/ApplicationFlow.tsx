@@ -13,6 +13,7 @@ import {
   type PersonalDetails,
   type UploadValue,
 } from "@/lib/application-flow";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { BuyerDocumentsStep } from "./BuyerDocumentsStep";
 import { GuarantorDocumentsStep } from "./GuarantorDocumentsStep";
 import { PersonalDetailsStep } from "./PersonalDetailsStep";
@@ -103,6 +104,8 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const uploadsRef = useRef(uploads);
+  const flowRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery("(max-width: 740px)");
 
   const { from, to } = useMemo(() => getNextMonthDateRange(), []);
   const minDate = toDateInputValue(from);
@@ -116,6 +119,15 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
   useEffect(() => {
     onStepChange?.(step);
   }, [onStepChange, step]);
+
+  // Scroll the flow block into view on mobile when step changes
+  useEffect(() => {
+    if (isMobile && flowRef.current) {
+      setTimeout(() => {
+        flowRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 0 );
+    }
+  }, [isMobile, step]);
 
   useEffect(() => {
     return () => {
@@ -295,7 +307,7 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
 
       clearSavedDetails();
       setSubmitted(true);
-      onStepChange?.(1);
+      onStepChange?.(2);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Не удалось отправить заявку.");
     } finally {
@@ -305,7 +317,7 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
 
   if (submitted) {
     return (
-      <div className={`${styles.flow} ${expanded ? styles.flowExpanded : ""}`}>
+      <div ref={flowRef} className={`${styles.flow} ${styles.flowExpanded}`}>
         <div className={styles.successScreen}>
           <div className={styles.successIcon}>
             <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -326,7 +338,7 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
   }
 
   return (
-    <div className={expanded ? `${styles.flow} ${styles.flowExpanded}` : styles.flow}>
+    <div ref={flowRef} className={expanded ? `${styles.flow} ${styles.flowExpanded}` : styles.flow}>
       <div className={styles.topBar}>
         <div className={styles.topCopy}>
           <span className={styles.eyebrow}>Оформление</span>
