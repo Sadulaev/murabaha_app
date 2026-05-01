@@ -132,8 +132,10 @@ export async function notifyNewOrder(order: Order): Promise<void> {
     }
   } catch (err) {
     console.error(`[telegram] Notification failed for order ${order.id}:`, err)
-    if (err instanceof AggregateError && Array.isArray(err.errors)) {
-      for (const nested of err.errors) {
+    const cause = (err instanceof Error) ? (err as Error & { cause?: unknown }).cause : undefined
+    const aggregate = (err instanceof AggregateError) ? err : (cause instanceof AggregateError) ? cause : null
+    if (aggregate && Array.isArray(aggregate.errors)) {
+      for (const nested of aggregate.errors) {
         console.error(`[telegram]   └─`, nested)
       }
     }
