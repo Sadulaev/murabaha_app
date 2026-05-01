@@ -30,9 +30,12 @@ export interface OrderFilesInput {
   guarantor2PassportResidence?: UploadedFile
 }
 
+export type OrderStatus = 'pending' | 'in_progress' | 'rejected'
+
 export interface Order {
   id: string
   createdAt: string
+  status: OrderStatus
   cost: number
   firstPayment: number
   period: number

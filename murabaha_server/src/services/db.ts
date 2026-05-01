@@ -23,6 +23,7 @@ export async function initDb(): Promise<void> {
     CREATE TABLE IF NOT EXISTS orders (
       id TEXT PRIMARY KEY,
       created_at TIMESTAMPTZ NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
       cost INTEGER NOT NULL,
       first_payment INTEGER NOT NULL,
       period INTEGER NOT NULL,
@@ -41,5 +42,10 @@ export async function initDb(): Promise<void> {
       guarantor2_passport_main_path TEXT,
       guarantor2_passport_residence_path TEXT
     )
+  `)
+
+  // Migration: add status column to existing tables
+  await db.query(`
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'
   `)
 }

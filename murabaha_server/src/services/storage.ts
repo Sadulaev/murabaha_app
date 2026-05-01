@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
-import type { Order, OrderFilesInput, OrderInput, UploadedFile } from '../types/order'
+import type { Order, OrderFilesInput, OrderInput, OrderStatus, UploadedFile } from '../types/order'
 import { getDb } from './db'
 
 const DATA_DIR = path.join(process.cwd(), 'data')
@@ -32,6 +32,7 @@ function mapRowToOrder(row: Record<string, unknown>): Order {
   return {
     id: String(row.id),
     createdAt: new Date(String(row.created_at)).toISOString(),
+    status: (row.status as OrderStatus) ?? 'pending',
     cost: Number(row.cost),
     firstPayment: Number(row.first_payment),
     period: Number(row.period),
@@ -62,6 +63,7 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
   const order: Order = {
     id,
     createdAt: new Date().toISOString(),
+    status: 'pending',
     cost: input.cost,
     firstPayment: input.firstPayment,
     period: input.period,
@@ -145,8 +147,61 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
   return order
 }
 
-export async function getOrders(): Promise<Order[]> {
+export async function getOrders(filters?: { status?: string; search?: string }): Promise<Order[]> {
   const db = getDb()
-  const result = await db.query('SELECT * FROM orders ORDER BY created_at DESC')
+  const conditions: string[] = []
+  const params: unknown[] = []
+
+  if (filters?.status) {
+    params.push(filters.status)
+    conditions.push(`status = $${params.length}`)
+  }
+
+  if (filters?.search) {
+    const term = `%${filters.search.toLowerCase()}%`
+    params.push(term)
+    const i = params.length
+    conditions.push(`(LOWER(id) LIKE $${i} OR LOWER(first_name) LIKE $${i} OR LOWER(last_name) LIKE $${i})`)
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+  const result = await db.query(`SELECT * FROM orders ${where} ORDER BY created_at DESC`, params)
   return result.rows.map((row: Record<string, unknown>) => mapRowToOrder(row))
+}
+
+export async function updateOrderStatus(id: string, status: OrderStatus): Promise<Order | null> {
+  const db = getDb()
+  const result = await db.query(
+    'UPDATE orders SET status = $1 WHERE id = $2 RETURNING *',
+    [status, id],
+  )
+  if (result.rows.length === 0) return null
+  return mapRowToOrder(result.rows[0] as Record<string, unknown>)
+}
+
+export async function deleteOrderFiles(id: string): Promise<boolean> {
+  const db = getDb()
+
+  // Wipe file paths in DB
+  const result = await db.query(
+    `UPDATE orders SET
+      buyer_passport_main_path = '',
+      buyer_passport_residence_path = '',
+      buyer_selfie_path = '',
+      guarantor1_passport_main_path = '',
+      guarantor1_passport_residence_path = '',
+      guarantor2_passport_main_path = NULL,
+      guarantor2_passport_residence_path = NULL
+    WHERE id = $1`,
+    [id],
+  ) as unknown as { rowCount: number }
+  if (result.rowCount === 0) return false
+
+  // Remove files from disk
+  const orderDir = path.join(UPLOADS_DIR, id)
+  if (fs.existsSync(orderDir)) {
+    fs.rmSync(orderDir, { recursive: true, force: true })
+  }
+
+  return true
 }
