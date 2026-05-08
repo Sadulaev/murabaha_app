@@ -34,7 +34,7 @@ export function ContactsSection({ active, onReset }: ContactsSectionProps) {
           </AnimatedText>
 
           <AnimatedText as="h2" active={active} delay={80} className={styles.title}>
-            Быстрый выход на связь без длинной переписки.
+            Всегда на связи. Отвечаем в течении нескольких минут.
           </AnimatedText>
 
           <AnimatedText as="p" active={active} delay={160} className={styles.description}>

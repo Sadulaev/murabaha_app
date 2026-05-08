@@ -124,12 +124,17 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
     onStepChange?.(step);
   }, [onStepChange, step]);
 
-  // Scroll the flow block into view on mobile when step changes
+  const prevStepRef = useRef(step);
+
+  // Scroll the flow block into view on mobile only when step actually changes value
   useEffect(() => {
+    const prevStep = prevStepRef.current;
+    prevStepRef.current = step;
+    if (step === prevStep) return; // isMobile hydration change — ignore
     if (isMobile && flowRef.current) {
       setTimeout(() => {
         flowRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 0 );
+      }, 0);
     }
   }, [isMobile, step]);
 
