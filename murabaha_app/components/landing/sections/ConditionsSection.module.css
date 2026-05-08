@@ -95,6 +95,10 @@
   box-shadow: var(--shadow-strong);
 }
 
+.mobileButton {
+  display: none;
+}
+
 .cardsColumn {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
@@ -183,6 +187,16 @@
 
   .cardsColumn {
     grid-template-rows: auto auto;
+  }
+
+  .desktopButton {
+    display: none;
+  }
+
+  .mobileButton {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
   }
 }
 

@@ -18,6 +18,8 @@ export interface OrderInput {
   phone: string
   firstPaymentDate: string // ISO date string
   guarantorsCount: number
+  guarantor1Phone: string
+  guarantor2Phone?: string
 }
 
 export interface OrderFilesInput {
@@ -46,6 +48,9 @@ export interface Order {
   phone: string
   firstPaymentDate: string
   guarantorsCount: number
+
+  guarantor1Phone: string
+  guarantor2Phone?: string
 
   buyerPassportMainPath: string
   buyerPassportResidencePath: string

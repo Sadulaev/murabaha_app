@@ -7,16 +7,16 @@ type ContactsSectionProps = {
 };
 
 const contactCards = [
-  {
-    title: "Телефон",
-    value: "+7 (928) 895-80-95",
-    href: "tel:+79288958095",
-  },
-  {
-    title: "WhatsApp",
-    value: "Написать в WhatsApp",
-    href: "https://wa.me/79288958095",
-  },
+  // {
+  //   title: "Телефон",
+  //   value: "+7 (928) 895-80-95",
+  //   href: "tel:+79288958095",
+  // },
+  // {
+  //   title: "WhatsApp",
+  //   value: "Написать в WhatsApp",
+  //   href: "https://wa.me/79288958095",
+  // },
   {
     title: "Адрес",
     value: "г. Грозный, ул. Ярославского, д. 12",
@@ -44,21 +44,21 @@ export function ContactsSection({ active, onReset }: ContactsSectionProps) {
 
           <AnimatedText as="div" active={active} delay={220} className={styles.scheduleCard}>
             <span className={styles.scheduleLabel}>Режим работы</span>
-            <strong>Пн–Сб: 10:00 – 20:00</strong>
-            <span>Вс: выходной</span>
-          </AnimatedText>
-
-          <AnimatedText as="div" active={active} delay={280} className={styles.actionRow}>
-            <a href="tel:+79288958095" className={styles.primaryButton}>
-              Позвонить
-            </a>
-            <a href="https://wa.me/79288958095" target="_blank" rel="noreferrer" className={styles.secondaryButton}>
-              WhatsApp
-            </a>
+            <strong>Ежедневно</strong>
+            <strong>9:00 – 18:00</strong>
+            <strong>Вс: выходной</strong>
           </AnimatedText>
         </div>
 
         <div className={styles.cardsColumn}>
+          <AnimatedText as="div" active={active} delay={280} className={styles.actionRow}>
+            <a href="tel:+79288958095" className={styles.primaryButton}>
+              Позвонить
+            </a>
+            <a href="https://wa.me/79288958095" target="_blank" rel="noreferrer" className={styles.whatsappButton}>
+              WhatsApp
+            </a>
+          </AnimatedText>
           {contactCards.map((card, index) => (
             <AnimatedText
               key={card.title}
@@ -76,7 +76,7 @@ export function ContactsSection({ active, onReset }: ContactsSectionProps) {
           ))}
 
           <AnimatedText as="button" active={active} delay={420} className={styles.resetButton} onClick={onReset}>
-            Вернуться к условиям
+            Главная страница
           </AnimatedText>
         </div>
       </div>

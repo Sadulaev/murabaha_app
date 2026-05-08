@@ -82,7 +82,9 @@
 
 .primaryButton,
 .secondaryButton,
+.whatsappButton,
 .resetButton {
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -91,17 +93,31 @@
   font-weight: 700;
 }
 
-.primaryButton,
-.resetButton {
+.primaryButton {
   border: 0;
   background: var(--ink);
   color: var(--paper-strong);
+  box-shadow: var(--shadow-strong);
+}
+
+.whatsappButton {
+  border: 0;
+  background: #25d366;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
 }
 
 .secondaryButton {
   border: 1px solid rgba(11, 20, 37, 0.12);
   background: rgba(255, 248, 239, 0.54);
   color: var(--ink);
+}
+
+.resetButton {
+  border: 1.5px solid rgba(11, 20, 37, 0.22);
+  background: transparent;
+  color: rgba(11, 20, 37, 0.7);
+  box-shadow: none;
 }
 
 .cardsColumn {
@@ -122,10 +138,6 @@
 .cardValue {
   font-size: clamp(1.15rem, 2vw, 1.55rem);
   line-height: 1.2;
-}
-
-.resetButton {
-  width: fit-content;
 }
 
 @media (max-width: 960px) {

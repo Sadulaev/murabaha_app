@@ -5,6 +5,7 @@ import path from 'path'
 import ordersRouter from './routes/orders'
 import adminRouter from './routes/admin'
 import { initDb } from './services/db'
+import { startCleanupCron } from './services/cleanup'
 
 const app = express()
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001
@@ -41,6 +42,7 @@ initDb()
     app.listen(PORT, () => {
       console.log(`Murabaha server running on http://localhost:${PORT}`)
     })
+    startCleanupCron()
   })
   .catch((error) => {
     console.error('Failed to initialize database:', error)

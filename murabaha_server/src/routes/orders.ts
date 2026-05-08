@@ -49,6 +49,8 @@ function normalizeOrderInput(body: Record<string, unknown>): OrderInput | { erro
   const lastName = typeof body.lastName === 'string' ? body.lastName.trim() : ''
   const phone = typeof body.phone === 'string' ? body.phone.trim() : ''
   const firstPaymentDate = typeof body.firstPaymentDate === 'string' ? body.firstPaymentDate.trim() : ''
+  const guarantor1Phone = typeof body.guarantor1Phone === 'string' ? body.guarantor1Phone.trim() : ''
+  const guarantor2Phone = typeof body.guarantor2Phone === 'string' ? body.guarantor2Phone.trim() : undefined
   const cost = parseNumber(body.cost)
   const firstPayment = parseNumber(body.firstPayment)
   const period = parseNumber(body.period)
@@ -82,6 +84,8 @@ function normalizeOrderInput(body: Record<string, unknown>): OrderInput | { erro
     phone,
     firstPaymentDate,
     guarantorsCount: normalizedGuarantorsCount,
+    guarantor1Phone,
+    guarantor2Phone,
   }
 }
 

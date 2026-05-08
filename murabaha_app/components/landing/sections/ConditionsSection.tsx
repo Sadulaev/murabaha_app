@@ -68,7 +68,7 @@ export function ConditionsSection({ active, onNext }: ConditionsSectionProps) {
             </div>
           </AnimatedText>
 
-          <AnimatedText as="button" active={active} delay={280} className={styles.primaryButton} onClick={onNext}>
+          <AnimatedText as="button" active={active} delay={280} className={`${styles.primaryButton} ${styles.desktopButton}`} onClick={onNext}>
             Перейти к калькулятору
           </AnimatedText>
         </div>
@@ -89,6 +89,10 @@ export function ConditionsSection({ active, onNext }: ConditionsSectionProps) {
               </AnimatedText>
             ))}
           </div>
+
+          <AnimatedText as="button" active={active} delay={280} className={`${styles.primaryButton} ${styles.mobileButton}`} onClick={onNext}>
+            Перейти к калькулятору
+          </AnimatedText>
         </div>
       </div>
     </div>

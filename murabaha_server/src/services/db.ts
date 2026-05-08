@@ -48,4 +48,12 @@ export async function initDb(): Promise<void> {
   await db.query(`
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'
   `)
+
+  // Migration: add guarantor phone columns
+  await db.query(`
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS guarantor1_phone TEXT NOT NULL DEFAULT ''
+  `)
+  await db.query(`
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS guarantor2_phone TEXT
+  `)
 }
