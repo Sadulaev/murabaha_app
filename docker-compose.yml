@@ -17,27 +17,27 @@ services:
       timeout: 5s
       retries: 5
 
-  # murabaha_server:
-  #   build:
-  #     context: ./murabaha_server
-  #   container_name: murabaha_server
-  #   restart: unless-stopped
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #   environment:
-  #     PORT: 3001
-  #     DATABASE_URL: ${DATABASE_URL}
-  #     CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
-  #     ADMIN_API_KEY: ${ADMIN_API_KEY}
-  #     ADMIN_USERNAME: ${ADMIN_USERNAME}
-  #     ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-  #     TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-  #     TELEGRAM_CHANNEL_ID: ${TELEGRAM_CHANNEL_ID}
-  #   ports:
-  #     - "127.0.0.1:3001:3001"
-  #   volumes:
-  #     - murabaha_server_data:/app/data
+  murabaha_server:
+    build:
+      context: ./murabaha_server
+    container_name: murabaha_server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3001
+      DATABASE_URL: ${DATABASE_URL}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      ADMIN_API_KEY: ${ADMIN_API_KEY}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHANNEL_ID: ${TELEGRAM_CHANNEL_ID}
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - murabaha_server_data:/app/data
 
   murabaha_app:
     build:
