@@ -13,6 +13,10 @@ export function roundToNearestHundred(value: number): number {
   return Math.round(value / 100) * 100;
 }
 
+export function roundToLowerHundred(value: number): number {
+  return Math.floor(value / 100) * 100;
+}
+
 export function decryptNumber(encrypted: string): number {
   try {
     if (!encrypted.startsWith("f") || !encrypted.endsWith("t")) {
@@ -67,17 +71,22 @@ export function calculateInstallment({
     };
   }
 
-  const countedSum = firstPayment >= cost / 2 ? cost - firstPayment : cost;
+  const percentsCountsSum = firstPayment >= cost / 2 ? cost - firstPayment : cost;
   const baseRate = decryptNumber(encryptedRate);
   const additionalPercent = firstPayment >= cost * 0.25 ? 0 : baseRate / period;
   const percent = baseRate + additionalPercent;
 
+  const percentsCountedSum = percentsCountsSum * (percent / 100) * period;
+
+  // Round monthly DOWN so rounding loss is always on our side, never the user's
+  const monthlyPayment = roundToLowerHundred((cost + percentsCountedSum - firstPayment) / period);
+  // Derive summary from actual payments to keep numbers consistent
+  const summaryPayment = firstPayment + monthlyPayment * period;
+
   return {
-    monthlyPayment: roundToNearestHundred(
-      (cost + countedSum * (percent / 100) * period - firstPayment) / period,
-    ),
-    summaryPayment: roundToNearestHundred(cost + countedSum * (percent / 100) * period),
-    monthlyAdditionalPayment: roundToNearestHundred((countedSum / 100) * percent),
+    monthlyPayment,
+    summaryPayment,
+    monthlyAdditionalPayment: roundToLowerHundred(percentsCountedSum / period),
     baseRate,
   };
 }
