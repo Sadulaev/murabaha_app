@@ -22,10 +22,10 @@ export function FaceCaptureCard({ value, onCapture, onClear }: FaceCaptureCardPr
         <article className={styles.uploadCard}>
           <div className={styles.uploadCardHeader}>
             <div className={styles.uploadCardTitleRow}>
-              <strong>Фото лица</strong>
+              <strong>Селфи с паспортом</strong>
               <span className={styles.uploadDone}>✓</span>
             </div>
-            <span className={styles.uploadCardDesc}>Биометрическая верификация пройдена</span>
+            <span className={styles.uploadCardDesc}>Фото загружено</span>
           </div>
 
           <div className={styles.uploadActions}>
@@ -59,9 +59,9 @@ export function FaceCaptureCard({ value, onCapture, onClear }: FaceCaptureCardPr
       <article className={styles.uploadCard}>
         <div className={styles.uploadCardHeader}>
           <div className={styles.uploadCardTitleRow}>
-            <strong>Фото лица</strong>
+            <strong>Селфи с паспортом</strong>
           </div>
-          <span className={styles.uploadCardDesc}>Биометрическая верификация</span>
+          <span className={styles.uploadCardDesc}>Сфотографируйтесь с паспортом в руке</span>
         </div>
 
         <div className={styles.uploadActions}>

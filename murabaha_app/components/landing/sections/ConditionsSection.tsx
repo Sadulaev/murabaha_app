@@ -16,20 +16,20 @@ const requirements = [
     text: "Обязательная прописка в Чеченской Республике.",
   },
   {
-    title: "До 100 000 руб",
+    title: "Один поручитель",
     text: "Если сумма до 100 000 руб, нужен один поручитель.",
   },
   {
-    title: "100 000 – 300 000 руб",
+    title: "Два поручителя",
     text: "Если сумма от 100 000 до 300 000 руб, нужны два поручителя.",
   },
 ];
 
 const advantages = [
-  "По нормам Ислама",
-  "Без штрафов и пеней",
-  "Дата платежа на выбор",
+  "Онлайн оформление",
   "Наличный и безналичный расчет",
+  "Без штрафов и пеней",
+  "Гибкий график платежей",
 ];
 
 export function ConditionsSection({ active, onNext }: ConditionsSectionProps) {
@@ -42,12 +42,15 @@ export function ConditionsSection({ active, onNext }: ConditionsSectionProps) {
           </AnimatedText>
 
           <AnimatedText as="h1" active={active} delay={80} className={styles.title}>
-            Рассрочка, где правила видны сразу.
+            Рассрочка по нормам Ислама
           </AnimatedText>
 
-          <AnimatedText as="p" active={active} delay={160} className={styles.description}>
-            От 10 000 до 300 000 руб. Без банка, без лишних экранов и с понятными рамками с первого
-            касания.
+          <AnimatedText as="div" active={active} delay={360} className={styles.advantageStrip}>
+            {advantages.map((item) => (
+              <span key={item} className={styles.advantageChip}>
+                {item}
+              </span>
+            ))}
           </AnimatedText>
 
           <AnimatedText as="div" active={active} delay={220} className={styles.metrics}>
@@ -56,11 +59,11 @@ export function ConditionsSection({ active, onNext }: ConditionsSectionProps) {
               <span className={styles.metricLabel}>сумма товара</span>
             </div>
             <div className={styles.metricCard}>
-              <span className={styles.metricValue}>1 – 12 мес.</span>
+              <span className={styles.metricValue}>3 – 12 мес.</span>
               <span className={styles.metricLabel}>срок рассрочки</span>
             </div>
             <div className={styles.metricCard}>
-              <span className={styles.metricValue}>0 – 80%</span>
+              <span className={styles.metricValue}>0 – 20%</span>
               <span className={styles.metricLabel}>первый взнос</span>
             </div>
           </AnimatedText>
@@ -80,20 +83,12 @@ export function ConditionsSection({ active, onNext }: ConditionsSectionProps) {
                 delay={120 + index * 70}
                 className={styles.card}
               >
-                <span className={styles.cardIndex}>0{index + 1}</span>
+                <span className={styles.cardIndex}>{index + 1}</span>
                 <h2 className={styles.cardTitle}>{item.title}</h2>
                 <p className={styles.cardText}>{item.text}</p>
               </AnimatedText>
             ))}
           </div>
-
-          <AnimatedText as="div" active={active} delay={360} className={styles.advantageStrip}>
-            {advantages.map((item) => (
-              <span key={item} className={styles.advantageChip}>
-                {item}
-              </span>
-            ))}
-          </AnimatedText>
         </div>
       </div>
     </div>

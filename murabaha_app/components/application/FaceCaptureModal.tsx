@@ -103,11 +103,11 @@ export function FaceCaptureModal({ onCapture, onClose }: FaceCaptureModalProps) 
       onClick={handleClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Сделать фото лица"
+      aria-label="Сделать селфи с паспортом"
     >
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <span className={styles.headerTitle}>Сделайте фото лица</span>
+          <span className={styles.headerTitle}>Селфи с паспортом</span>
           <button
             type="button"
             className={styles.closeBtn}
@@ -149,18 +149,8 @@ export function FaceCaptureModal({ onCapture, onClose }: FaceCaptureModalProps) 
           <video ref={videoRef} className={styles.video} playsInline muted />
           <canvas ref={canvasRef} className={styles.canvas} />
 
-          <div className={styles.overlay}>
-            <div className={styles.faceFrame}>
-              <span className={`${styles.corner} ${styles.cornerTL}`} />
-              <span className={`${styles.corner} ${styles.cornerTR}`} />
-              <span className={`${styles.corner} ${styles.cornerBL}`} />
-              <span className={`${styles.corner} ${styles.cornerBR}`} />
-              <span className={styles.scanLine} />
-            </div>
-          </div>
-
           <div className={styles.statusBar}>
-            <span className={styles.statusText}>Расположите лицо в овале</span>
+            <span className={styles.statusText}>Держите паспорт рядом с лицом и нажмите кнопку</span>
           </div>
         </div>
 

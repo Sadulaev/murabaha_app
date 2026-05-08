@@ -13,6 +13,7 @@
 }
 
 .section {
+  position: relative;
   width: 100vw;
   height: 100dvh;
   overflow: hidden;
@@ -33,6 +34,7 @@
   }
 
   .section {
+    position: relative;
     height: auto;
     min-height: 100svh;
     overflow: visible;

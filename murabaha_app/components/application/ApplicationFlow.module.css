@@ -257,6 +257,22 @@
   border-color: rgba(239, 111, 77, 0.4);
 }
 
+.dateSelect {
+  width: 100%;
+  border: 1px solid rgba(11, 20, 37, 0.12);
+  border-radius: 0.9rem;
+  padding: 0.62rem 0.78rem;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+  font-size: 0.94rem;
+  appearance: auto;
+}
+
+.dateSelect:focus {
+  outline: 2px solid rgba(239, 111, 77, 0.25);
+  border-color: rgba(239, 111, 77, 0.4);
+}
+
 .dateHint,
 .error,
 .helper {
@@ -636,4 +652,109 @@
   .uploadCard {
     flex-direction: column;
   }
+}
+
+/* ── Passport upload modal ── */
+
+.passportBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(7, 17, 31, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.passportModalContent {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: min(460px, 90vw);
+  max-height: 90vh;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 32px 80px rgba(7, 17, 31, 0.45);
+}
+
+.passportModalBody {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  overflow-y: auto;
+}
+
+.passportSlot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border: 1px solid rgba(11, 20, 37, 0.1);
+  border-radius: 0.9rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(11, 20, 37, 0.03);
+}
+
+.passportSlotLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Preview overlay — inside the passport backdrop stacking context */
+
+.passportPreviewLayer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 17, 31, 0.88);
+}
+
+.passportPreviewImg {
+  display: block;
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: 0.75rem;
+}
+
+.passportPreviewClose {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* ── Guarantor block (phone + docs) ── */
+
+.guarantorBlock {
+  display: grid;
+  gap: 0.65rem;
+  border: 1px solid rgba(11, 20, 37, 0.08);
+  border-radius: 1.1rem;
+  padding: 0.8rem;
+  background: rgba(11, 20, 37, 0.02);
 }

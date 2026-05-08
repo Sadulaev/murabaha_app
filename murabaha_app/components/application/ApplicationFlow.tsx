@@ -99,6 +99,7 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
     ...loadSavedDetails(),
   }));
   const [uploads, setUploads] = useState<UploadState>(initialUploads);
+  const [guarantorPhones, setGuarantorPhones] = useState({ guarantor1: "", guarantor2: "" });
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -148,6 +149,7 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
     setStep(1);
     setDetails(makeInitialDetails());
     setUploads(initialUploads);
+    setGuarantorPhones({ guarantor1: "", guarantor2: "" });
     setStepError(null);
     setSubmitError(null);
     setSubmitted(false);
@@ -228,11 +230,19 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
       return "Загрузите паспорт поручителя 1.";
     }
 
+    if (!isValidPhone(guarantorPhones.guarantor1)) {
+      return "Введите корректный номер телефона поручителя 1.";
+    }
+
     if (
       calculation.guarantorsCount === 2 &&
       (!uploads.guarantor2PassportMain || !uploads.guarantor2PassportResidence)
     ) {
       return "Для этой суммы нужны документы двух поручителей.";
+    }
+
+    if (calculation.guarantorsCount === 2 && !isValidPhone(guarantorPhones.guarantor2)) {
+      return "Введите корректный номер телефона поручителя 2.";
     }
 
     return null;
@@ -279,6 +289,10 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
     formData.append("lastName", trimText(details.lastName));
     formData.append("phone", details.phone);
     formData.append("firstPaymentDate", details.firstPaymentDate);
+    formData.append("guarantor1Phone", guarantorPhones.guarantor1);
+    if (calculation.guarantorsCount === 2) {
+      formData.append("guarantor2Phone", guarantorPhones.guarantor2);
+    }
     formData.append("buyerPassportMain", uploads.buyerPassportMain!.file);
     formData.append("buyerPassportResidence", uploads.buyerPassportResidence!.file);
     formData.append("buyerSelfie", uploads.buyerSelfie!.file);
@@ -425,16 +439,21 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
                 guarantor1={{
                   passportMain: uploads.guarantor1PassportMain,
                   passportResidence: uploads.guarantor1PassportResidence,
+                  phone: guarantorPhones.guarantor1,
                 }}
                 guarantor2={{
                   passportMain: uploads.guarantor2PassportMain,
                   passportResidence: uploads.guarantor2PassportResidence,
+                  phone: guarantorPhones.guarantor2,
                 }}
                 error={stepError}
                 submitting={submitting}
                 submitError={submitError}
                 onSelect={(field, file) => updateUpload(field as keyof UploadState, file)}
                 onClear={(field) => clearUpload(field as keyof UploadState)}
+                onPhoneChange={(key, rawPhone) =>
+                  setGuarantorPhones((prev) => ({ ...prev, [key]: formatPhoneNumber(rawPhone) }))
+                }
               />
             </div>
           </section>
