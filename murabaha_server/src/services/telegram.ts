@@ -89,7 +89,8 @@ export async function notifyNewOrder(order: Order): Promise<void> {
     `👤 <b>Покупатель:</b> ${order.firstName} ${order.lastName}`,
     `📞 <b>Телефон:</b> ${order.phone}`,
     `📅 <b>Дата первого платежа:</b> ${paymentDate}`,
-    '',
+    ...(order.storeName ? [`🏪 <b>Магазин:</b> ${order.storeName}`] : []),
+    '',,
     `👥 <b>Поручитель 1:</b> ${order.guarantor1Phone || '—'}`,
     ...(order.guarantor2Phone ? [`👥 <b>Поручитель 2:</b> ${order.guarantor2Phone}`] : []),
     '',
@@ -113,6 +114,7 @@ export async function notifyNewOrder(order: Order): Promise<void> {
     order.guarantor1PassportResidencePath,
     order.guarantor2PassportMainPath,
     order.guarantor2PassportResidencePath,
+    order.productPhotoPath,
   ]
     .filter((p): p is string => Boolean(p))
     .map(p => path.join(DATA_DIR, p))

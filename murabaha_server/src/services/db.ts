@@ -56,4 +56,12 @@ export async function initDb(): Promise<void> {
   await db.query(`
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS guarantor2_phone TEXT
   `)
+
+  // Migration: add store name and product photo
+  await db.query(`
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS store_name TEXT
+  `)
+  await db.query(`
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS product_photo_path TEXT
+  `)
 }

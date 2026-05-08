@@ -20,6 +20,7 @@ export interface OrderInput {
   guarantorsCount: number
   guarantor1Phone: string
   guarantor2Phone?: string
+  storeName?: string
 }
 
 export interface OrderFilesInput {
@@ -30,6 +31,7 @@ export interface OrderFilesInput {
   guarantor1PassportResidence: UploadedFile
   guarantor2PassportMain?: UploadedFile
   guarantor2PassportResidence?: UploadedFile
+  productPhoto?: UploadedFile
 }
 
 export type OrderStatus = 'pending' | 'in_progress' | 'rejected'
@@ -52,6 +54,8 @@ export interface Order {
   guarantor1Phone: string
   guarantor2Phone?: string
 
+  storeName?: string
+
   buyerPassportMainPath: string
   buyerPassportResidencePath: string
   buyerSelfiePath: string
@@ -59,4 +63,5 @@ export interface Order {
   guarantor1PassportResidencePath: string
   guarantor2PassportMainPath?: string
   guarantor2PassportResidencePath?: string
+  productPhotoPath?: string
 }

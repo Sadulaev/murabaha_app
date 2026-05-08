@@ -13,6 +13,7 @@ export type PersonalDetails = {
   lastName: string;
   phone: string;
   firstPaymentDate: string;
+  storeName: string;
 };
 
 export type UploadValue = {

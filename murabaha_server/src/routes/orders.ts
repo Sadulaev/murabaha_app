@@ -9,7 +9,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 12 * 1024 * 1024,
-    files: 7,
+    files: 8,
   },
   fileFilter: (_req, file, callback) => {
     if (file.mimetype.startsWith('image/')) {
@@ -29,6 +29,7 @@ const uploadFields = upload.fields([
   { name: 'guarantor1PassportResidence', maxCount: 1 },
   { name: 'guarantor2PassportMain', maxCount: 1 },
   { name: 'guarantor2PassportResidence', maxCount: 1 },
+  { name: 'productPhoto', maxCount: 1 },
 ])
 
 function parseNumber(value: unknown): number | null {
@@ -51,6 +52,7 @@ function normalizeOrderInput(body: Record<string, unknown>): OrderInput | { erro
   const firstPaymentDate = typeof body.firstPaymentDate === 'string' ? body.firstPaymentDate.trim() : ''
   const guarantor1Phone = typeof body.guarantor1Phone === 'string' ? body.guarantor1Phone.trim() : ''
   const guarantor2Phone = typeof body.guarantor2Phone === 'string' ? body.guarantor2Phone.trim() : undefined
+  const storeName = typeof body.storeName === 'string' ? body.storeName.trim() || undefined : undefined
   const cost = parseNumber(body.cost)
   const firstPayment = parseNumber(body.firstPayment)
   const period = parseNumber(body.period)
@@ -86,6 +88,7 @@ function normalizeOrderInput(body: Record<string, unknown>): OrderInput | { erro
     guarantorsCount: normalizedGuarantorsCount,
     guarantor1Phone,
     guarantor2Phone,
+    storeName,
   }
 }
 
@@ -101,6 +104,7 @@ function validateOrderFiles(files: Record<string, UploadedFile[] | undefined>, g
   const guarantor1PassportResidence = files.guarantor1PassportResidence?.[0]
   const guarantor2PassportMain = files.guarantor2PassportMain?.[0]
   const guarantor2PassportResidence = files.guarantor2PassportResidence?.[0]
+  const productPhoto = files.productPhoto?.[0]
 
   if (!buyerPassportMain || !buyerPassportResidence || !buyerSelfie || !guarantor1PassportMain || !guarantor1PassportResidence) {
     return { error: 'Missing required photos' }
@@ -118,6 +122,7 @@ function validateOrderFiles(files: Record<string, UploadedFile[] | undefined>, g
     guarantor1PassportResidence,
     guarantor2PassportMain,
     guarantor2PassportResidence,
+    productPhoto,
   }
 }
 

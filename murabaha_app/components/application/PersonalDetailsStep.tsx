@@ -1,4 +1,5 @@
-import type { PersonalDetails } from "@/lib/application-flow";
+import { useId } from "react";
+import type { PersonalDetails, UploadValue } from "@/lib/application-flow";
 import styles from "./ApplicationFlow.module.css";
 
 type PersonalDetailsStepProps = {
@@ -6,8 +7,11 @@ type PersonalDetailsStepProps = {
   rangeLabel: string;
   minDate: string;
   maxDate: string;
+  productPhoto: UploadValue | null;
   error: string | null;
   onChange: (patch: Partial<PersonalDetails>) => void;
+  onProductPhotoSelect: (file: File) => void | Promise<void>;
+  onProductPhotoClear: () => void;
 };
 
 export function PersonalDetailsStep({
@@ -15,9 +19,14 @@ export function PersonalDetailsStep({
   rangeLabel,
   minDate,
   maxDate,
+  productPhoto,
   error,
   onChange,
+  onProductPhotoSelect,
+  onProductPhotoClear,
 }: PersonalDetailsStepProps) {
+  const photoInputId = useId();
+
   return (
     <>
       <div className={styles.fieldsGrid}>
@@ -65,6 +74,54 @@ export function PersonalDetailsStep({
             onChange={(event) => onChange({ firstPaymentDate: event.target.value })}
           />
           <span className={styles.dateHint}>{rangeLabel}</span>
+        </div>
+      </div>
+
+      <div className={styles.productSection}>
+        <p className={styles.productSectionLabel}>
+          Укажите товар — название магазина или фото. Хотя бы одно обязательно.
+        </p>
+
+        <div className={styles.productRow}>
+          <div className={styles.field} style={{ flex: 1 }}>
+            <label htmlFor="storeName">Название магазина</label>
+            <input
+              id="storeName"
+              type="text"
+              value={details.storeName}
+              onChange={(event) => onChange({ storeName: event.target.value })}
+              placeholder="Например: DNS, Wildberries..."
+            />
+          </div>
+
+          <article className={`${styles.uploadCard} ${styles.productPhotoCard}`}>
+            <div className={styles.uploadCardHeader}>
+              <div className={styles.uploadCardTitleRow}>
+                <strong>Фото товара</strong>
+                {productPhoto ? <span className={styles.uploadDone}>✓</span> : null}
+              </div>
+              <span className={styles.uploadCardDesc}>
+                {productPhoto ? productPhoto.file.name : "Скриншот или фото"}
+              </span>
+            </div>
+            <div className={styles.uploadActions}>
+              {productPhoto ? (
+                <button type="button" className={styles.deleteButton} onClick={onProductPhotoClear} aria-label="Удалить">
+                  ✕
+                </button>
+              ) : null}
+              <label htmlFor={photoInputId} className={styles.uploadButton}>
+                {productPhoto ? "Заменить" : "Загрузить"}
+              </label>
+              <input
+                id={photoInputId}
+                type="file"
+                accept="image/*"
+                className={styles.uploadInput}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) void onProductPhotoSelect(f); e.target.value = ""; }}
+              />
+            </div>
+          </article>
         </div>
       </div>
 

@@ -37,9 +37,6 @@ export function ConditionsSection({ active, onNext }: ConditionsSectionProps) {
     <div className={styles.section}>
       <div className={styles.shell}>
         <div className={styles.copyColumn}>
-          <AnimatedText as="span" active={active} delay={0} className={styles.eyebrow}>
-            Условия
-          </AnimatedText>
 
           <AnimatedText as="h1" active={active} delay={80} className={styles.title}>
             Рассрочка по нормам Ислама
@@ -72,7 +69,6 @@ export function ConditionsSection({ active, onNext }: ConditionsSectionProps) {
             Перейти к калькулятору
           </AnimatedText>
         </div>
-
         <div className={styles.cardsColumn}>
           <div className={styles.cardsGrid}>
             {requirements.map((item, index) => (

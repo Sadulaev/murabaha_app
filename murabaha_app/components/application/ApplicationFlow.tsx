@@ -30,6 +30,7 @@ type ApplicationFlowProps = {
 };
 
 type UploadState = {
+  productPhoto: UploadValue | null;
   buyerPassportMain: UploadValue | null;
   buyerPassportResidence: UploadValue | null;
   buyerSelfie: UploadValue | null;
@@ -40,6 +41,7 @@ type UploadState = {
 };
 
 const initialUploads: UploadState = {
+  productPhoto: null,
   buyerPassportMain: null,
   buyerPassportResidence: null,
   buyerSelfie: null,
@@ -55,6 +57,7 @@ function makeInitialDetails(): PersonalDetails {
     lastName: "",
     phone: "",
     firstPaymentDate: getDefaultFirstPaymentDate(),
+    storeName: "",
   };
 }
 
@@ -214,6 +217,10 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
       return "Выберите дату первого платежа в разрешенном диапазоне.";
     }
 
+    if (!trimText(details.storeName) && !uploads.productPhoto) {
+      return "Укажите название магазина или загрузите фото товара.";
+    }
+
     return null;
   };
 
@@ -289,6 +296,9 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
     formData.append("lastName", trimText(details.lastName));
     formData.append("phone", details.phone);
     formData.append("firstPaymentDate", details.firstPaymentDate);
+    if (trimText(details.storeName)) {
+      formData.append("storeName", trimText(details.storeName));
+    }
     formData.append("guarantor1Phone", guarantorPhones.guarantor1);
     if (calculation.guarantorsCount === 2) {
       formData.append("guarantor2Phone", guarantorPhones.guarantor2);
@@ -296,6 +306,9 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
     formData.append("buyerPassportMain", uploads.buyerPassportMain!.file);
     formData.append("buyerPassportResidence", uploads.buyerPassportResidence!.file);
     formData.append("buyerSelfie", uploads.buyerSelfie!.file);
+    if (uploads.productPhoto) {
+      formData.append("productPhoto", uploads.productPhoto.file);
+    }
     formData.append("guarantor1PassportMain", uploads.guarantor1PassportMain!.file);
     formData.append("guarantor1PassportResidence", uploads.guarantor1PassportResidence!.file);
 
@@ -409,8 +422,11 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
                 minDate={minDate}
                 maxDate={maxDate}
                 rangeLabel={rangeLabel}
+                productPhoto={uploads.productPhoto}
                 error={stepError}
                 onChange={handleDetailsChange}
+                onProductPhotoSelect={(file) => updateUpload("productPhoto", file)}
+                onProductPhotoClear={() => clearUpload("productPhoto")}
               />
             </div>
           </section>
