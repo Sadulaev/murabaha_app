@@ -58,6 +58,7 @@ function makeInitialDetails(): PersonalDetails {
     phone: "",
     firstPaymentDate: getDefaultFirstPaymentDate(),
     storeName: "",
+    sellerPhone: "",
   };
 }
 
@@ -170,10 +171,13 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
     setSubmitError(null);
     setDetails((current) => {
       const nextPhone = patch.phone !== undefined ? formatPhoneNumber(patch.phone) : current.phone;
+      const nextSellerPhone =
+        patch.sellerPhone !== undefined ? formatPhoneNumber(patch.sellerPhone) : current.sellerPhone;
       return {
         ...current,
         ...patch,
         phone: nextPhone,
+        sellerPhone: nextSellerPhone,
       };
     });
   };
@@ -222,8 +226,8 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
       return "Выберите дату первого платежа в разрешенном диапазоне.";
     }
 
-    if (!trimText(details.storeName) && !uploads.productPhoto) {
-      return "Укажите название магазина или загрузите фото товара.";
+    if (!uploads.productPhoto) {
+      return "Загрузите фото товара.";
     }
 
     return null;
@@ -303,6 +307,9 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
     formData.append("firstPaymentDate", details.firstPaymentDate);
     if (trimText(details.storeName)) {
       formData.append("storeName", trimText(details.storeName));
+    }
+    if (trimText(details.sellerPhone)) {
+      formData.append("sellerPhone", trimText(details.sellerPhone));
     }
     formData.append("guarantor1Phone", guarantorPhones.guarantor1);
     if (calculation.guarantorsCount === 2) {

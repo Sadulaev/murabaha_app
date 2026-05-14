@@ -6,10 +6,10 @@ import { ApplicationFlow } from "@/components/application/ApplicationFlow";
 import { AnimatedText } from "../AnimatedText";
 import {
   MAX_COST,
-  MAX_PERIOD,
   MIN_COST,
   calculateInstallment,
   costToSlider,
+  getMaxPeriod,
   roundToNearestHundred,
   sliderToCost,
 } from "@/lib/calculator";
@@ -43,6 +43,8 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
   const [period, setPeriod] = useState(6);
   const [flowStep, setFlowStep] = useState(1);
 
+  const maxPeriod = getMaxPeriod(cost, firstPayment);
+
   const result = useMemo(
     () => calculateInstallment({ cost, firstPayment, period, encryptedRate }),
     [cost, encryptedRate, firstPayment, period],
@@ -59,9 +61,14 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
     const sanitizedCost = clamp(Math.round(nextCost), 0, MAX_COST);
     setCost(sanitizedCost);
 
-    if (firstPayment > sanitizedCost * 0.8) {
-      setFirstPayment(roundToNearestHundred(sanitizedCost * 0.8));
-    }
+    const newFirstPayment =
+      firstPayment > sanitizedCost * 0.8
+        ? roundToNearestHundred(sanitizedCost * 0.8)
+        : firstPayment;
+    if (newFirstPayment !== firstPayment) setFirstPayment(newFirstPayment);
+
+    const newMax = getMaxPeriod(sanitizedCost, newFirstPayment);
+    if (period > newMax) setPeriod(newMax);
   };
 
   const handleFirstPaymentChange = (nextPayment: number) => {
@@ -71,6 +78,9 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
 
     const cappedPayment = clamp(Math.round(nextPayment), 0, roundToNearestHundred(cost * 0.8));
     setFirstPayment(cappedPayment);
+
+    const newMax = getMaxPeriod(cost, cappedPayment);
+    if (period > newMax) setPeriod(newMax);
   };
 
   const handlePeriodChange = (nextPeriod: number) => {
@@ -78,7 +88,7 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
       return;
     }
 
-    const sanitizedPeriod = clamp(Math.round(nextPeriod), 1, MAX_PERIOD);
+    const sanitizedPeriod = clamp(Math.round(nextPeriod), 1, maxPeriod);
     setPeriod(sanitizedPeriod);
 
     if (firstPayment < cost * 0.25) {
@@ -168,14 +178,14 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
                   className={styles.range}
                   type="range"
                   min={1}
-                  max={MAX_PERIOD}
+                  max={maxPeriod}
                   step={1}
-                  value={period}
+                  value={Math.min(period, maxPeriod)}
                   onChange={(event) => handlePeriodChange(Number(event.target.value))}
                 />
                 <div className={styles.fieldMeta}>
                   <span>1</span>
-                  <span>12</span>
+                  <span>{maxPeriod}</span>
                 </div>
               </label>
             </AnimatedText>

@@ -308,6 +308,14 @@
   align-items: flex-end;
 }
 
+.storeFields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
 .productPhotoCard {
   flex-shrink: 0;
   width: 50%;
@@ -319,7 +327,7 @@
     flex-direction: column;
   }
 
-  .productRow > .field {
+  .storeFields {
     width: 100%;
   }
 

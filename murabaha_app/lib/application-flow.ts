@@ -14,6 +14,7 @@ export type PersonalDetails = {
   phone: string;
   firstPaymentDate: string;
   storeName: string;
+  sellerPhone: string;
 };
 
 export type UploadValue = {

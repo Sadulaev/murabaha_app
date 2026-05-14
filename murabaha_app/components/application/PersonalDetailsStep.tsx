@@ -79,19 +79,32 @@ export function PersonalDetailsStep({
 
       <div className={styles.productSection}>
         <p className={styles.productSectionLabel}>
-          Укажите товар — название магазина или фото. Хотя бы одно обязательно.
+          Фото товара обязательно. Название магазина и номер продавца — необязательно.
         </p>
 
         <div className={styles.productRow}>
-          <div className={styles.field} style={{ flex: 1 }}>
-            <label htmlFor="storeName">Название магазина</label>
-            <input
-              id="storeName"
-              type="text"
-              value={details.storeName}
-              onChange={(event) => onChange({ storeName: event.target.value })}
-              placeholder="Например: DNS, Wildberries..."
-            />
+          <div className={styles.storeFields}>
+            <div className={styles.field}>
+              <label htmlFor="storeName">Название магазина</label>
+              <input
+                id="storeName"
+                type="text"
+                value={details.storeName}
+                onChange={(event) => onChange({ storeName: event.target.value })}
+                placeholder="Например: DNS, Wildberries..."
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="sellerPhone">Номер продавца</label>
+              <input
+                id="sellerPhone"
+                type="tel"
+                value={details.sellerPhone}
+                onChange={(event) => onChange({ sellerPhone: event.target.value })}
+                placeholder="+7 (___) ___-__-__"
+              />
+            </div>
           </div>
 
           <article className={`${styles.uploadCard} ${styles.productPhotoCard}`}>
