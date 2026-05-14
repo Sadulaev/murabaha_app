@@ -21,6 +21,7 @@ export interface OrderInput {
   guarantor1Phone: string
   guarantor2Phone?: string
   storeName?: string
+  sellerPhone?: string
 }
 
 export interface OrderFilesInput {
@@ -55,6 +56,7 @@ export interface Order {
   guarantor2Phone?: string
 
   storeName?: string
+  sellerPhone?: string
 
   buyerPassportMainPath: string
   buyerPassportResidencePath: string

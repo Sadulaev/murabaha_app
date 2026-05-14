@@ -46,6 +46,7 @@ function mapRowToOrder(row: Record<string, unknown>): Order {
     guarantor1Phone: String(row.guarantor1_phone ?? ''),
     guarantor2Phone: row.guarantor2_phone ? String(row.guarantor2_phone) : undefined,
     storeName: row.store_name ? String(row.store_name) : undefined,
+    sellerPhone: row.seller_phone ? String(row.seller_phone) : undefined,
     buyerPassportMainPath: String(row.buyer_passport_main_path),
     buyerPassportResidencePath: String(row.buyer_passport_residence_path),
     buyerSelfiePath: String(row.buyer_selfie_path),
@@ -81,6 +82,7 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
     guarantor1Phone: input.guarantor1Phone,
     guarantor2Phone: input.guarantor2Phone,
     storeName: input.storeName,
+    sellerPhone: input.sellerPhone,
 
     buyerPassportMainPath: savePhoto(files.buyerPassportMain, orderDir, 'buyer_passport_main'),
     buyerPassportResidencePath: savePhoto(files.buyerPassportResidence, orderDir, 'buyer_passport_residence'),
@@ -119,6 +121,7 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
           guarantor1_phone,
           guarantor2_phone,
           store_name,
+          seller_phone,
           buyer_passport_main_path,
           buyer_passport_residence_path,
           buyer_selfie_path,
@@ -128,7 +131,7 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
           guarantor2_passport_residence_path,
           product_photo_path
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
         )
       `,
       [
@@ -147,6 +150,7 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
         order.guarantor1Phone,
         order.guarantor2Phone ?? null,
         order.storeName ?? null,
+        order.sellerPhone ?? null,
         order.buyerPassportMainPath,
         order.buyerPassportResidencePath,
         order.buyerSelfiePath,

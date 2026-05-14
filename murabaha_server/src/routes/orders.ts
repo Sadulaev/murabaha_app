@@ -53,6 +53,7 @@ function normalizeOrderInput(body: Record<string, unknown>): OrderInput | { erro
   const guarantor1Phone = typeof body.guarantor1Phone === 'string' ? body.guarantor1Phone.trim() : ''
   const guarantor2Phone = typeof body.guarantor2Phone === 'string' ? body.guarantor2Phone.trim() : undefined
   const storeName = typeof body.storeName === 'string' ? body.storeName.trim() || undefined : undefined
+  const sellerPhone = typeof body.sellerPhone === 'string' ? body.sellerPhone.trim() || undefined : undefined
   const cost = parseNumber(body.cost)
   const firstPayment = parseNumber(body.firstPayment)
   const period = parseNumber(body.period)
@@ -89,6 +90,7 @@ function normalizeOrderInput(body: Record<string, unknown>): OrderInput | { erro
     guarantor1Phone,
     guarantor2Phone,
     storeName,
+    sellerPhone,
   }
 }
 
@@ -106,7 +108,7 @@ function validateOrderFiles(files: Record<string, UploadedFile[] | undefined>, g
   const guarantor2PassportResidence = files.guarantor2PassportResidence?.[0]
   const productPhoto = files.productPhoto?.[0]
 
-  if (!buyerPassportMain || !buyerPassportResidence || !buyerSelfie || !guarantor1PassportMain || !guarantor1PassportResidence) {
+  if (!buyerPassportMain || !buyerPassportResidence || !buyerSelfie || !guarantor1PassportMain || !guarantor1PassportResidence || !productPhoto) {
     return { error: 'Missing required photos' }
   }
 
