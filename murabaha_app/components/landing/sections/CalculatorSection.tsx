@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ApplicationFlow } from "@/components/application/ApplicationFlow";
 import { AnimatedText } from "../AnimatedText";
@@ -41,9 +41,14 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
   const [cost, setCost] = useState(120000);
   const [firstPayment, setFirstPayment] = useState(30000);
   const [period, setPeriod] = useState(6);
+  const [periodInput, setPeriodInput] = useState("6");
   const [flowStep, setFlowStep] = useState(1);
 
   const maxPeriod = getMaxPeriod(cost, firstPayment);
+
+  useEffect(() => {
+    setPeriodInput(String(period));
+  }, [period]);
 
   const result = useMemo(
     () => calculateInstallment({ cost, firstPayment, period, encryptedRate }),
@@ -94,6 +99,12 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
     if (firstPayment < cost * 0.25) {
       setFirstPayment(roundToNearestHundred(cost * 0.25));
     }
+  };
+
+  const commitPeriodInput = (value: string) => {
+    const sanitizedPeriod = clamp(parseDigits(value), 1, maxPeriod);
+    setPeriodInput(String(sanitizedPeriod));
+    handlePeriodChange(sanitizedPeriod);
   };
 
   return (
@@ -169,8 +180,9 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
                   <input
                     type="text"
                     inputMode="numeric"
-                    value={period}
-                    onChange={(event) => handlePeriodChange(parseDigits(event.target.value))}
+                    value={periodInput}
+                    onChange={(event) => setPeriodInput(event.target.value.replace(/\D/g, ""))}
+                    onBlur={(event) => commitPeriodInput(event.target.value)}
                   />
                   <span>мес.</span>
                 </div>

@@ -226,10 +226,6 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
       return "Выберите дату первого платежа в разрешенном диапазоне.";
     }
 
-    if (!uploads.productPhoto) {
-      return "Загрузите фото товара.";
-    }
-
     return null;
   };
 

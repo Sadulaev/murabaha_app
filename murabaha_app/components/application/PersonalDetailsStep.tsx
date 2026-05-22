@@ -79,7 +79,7 @@ export function PersonalDetailsStep({
 
       <div className={styles.productSection}>
         <p className={styles.productSectionLabel}>
-          Фото товара обязательно. Название магазина и номер продавца — необязательно.
+          Фото товара, название магазина и номер продавца необязательны, но помогут быстрее оформить заявку.
         </p>
 
         <div className={styles.productRow}>
