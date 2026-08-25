@@ -41,7 +41,6 @@ export function LandingExperience() {
       onTouchStart={isMobile ? undefined : handleTouchStart}
     >
       {!isMobile && <NavigationDots activeIndex={activeIndex} onSelect={handleNavigate} />}
-      {partner && <PartnerBadge name={partner.name} />}
 
       <div
         className={styles.track}
@@ -49,6 +48,7 @@ export function LandingExperience() {
       >
         <section id={SECTION_IDS[0]} className={styles.section} aria-label="Условия">
           <BrandMark onClick={() => handleNavigate(0)} />
+          {partner && <PartnerBadge name={partner.name} />}
           <ConditionsSection active={isMobile || activeIndex === 0} onNext={() => handleNavigate(1)} />
         </section>
 

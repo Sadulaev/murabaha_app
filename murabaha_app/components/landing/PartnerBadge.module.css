@@ -1,6 +1,6 @@
 .badge {
-  position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 0.85rem);
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
   right: 1rem;
   z-index: 5;
   display: flex;
@@ -34,9 +34,10 @@
 
 @media (max-width: 720px) {
   .badge {
-    top: calc(env(safe-area-inset-top, 0px) + 3.6rem);
-    right: 50%;
-    transform: translateX(50%);
+    top: calc(env(safe-area-inset-top, 0px) + 0.75rem + 51px + 0.45rem);
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
     align-items: center;
     max-width: min(280px, 80vw);
   }
