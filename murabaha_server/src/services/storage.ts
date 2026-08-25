@@ -47,6 +47,8 @@ function mapRowToOrder(row: Record<string, unknown>): Order {
     guarantor2Phone: row.guarantor2_phone ? String(row.guarantor2_phone) : undefined,
     storeName: row.store_name ? String(row.store_name) : undefined,
     sellerPhone: row.seller_phone ? String(row.seller_phone) : undefined,
+    partnerId: row.partner_id ? String(row.partner_id) : undefined,
+    partnerName: row.partner_name ? String(row.partner_name) : undefined,
     buyerPassportMainPath: String(row.buyer_passport_main_path),
     buyerPassportResidencePath: String(row.buyer_passport_residence_path),
     buyerSelfiePath: String(row.buyer_selfie_path),
@@ -83,6 +85,8 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
     guarantor2Phone: input.guarantor2Phone,
     storeName: input.storeName,
     sellerPhone: input.sellerPhone,
+    partnerId: input.partnerId,
+    partnerName: input.partnerName,
 
     buyerPassportMainPath: savePhoto(files.buyerPassportMain, orderDir, 'buyer_passport_main'),
     buyerPassportResidencePath: savePhoto(files.buyerPassportResidence, orderDir, 'buyer_passport_residence'),
@@ -122,6 +126,8 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
           guarantor2_phone,
           store_name,
           seller_phone,
+          partner_id,
+          partner_name,
           buyer_passport_main_path,
           buyer_passport_residence_path,
           buyer_selfie_path,
@@ -131,7 +137,7 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
           guarantor2_passport_residence_path,
           product_photo_path
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
         )
       `,
       [
@@ -151,6 +157,8 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
         order.guarantor2Phone ?? null,
         order.storeName ?? null,
         order.sellerPhone ?? null,
+        order.partnerId ?? null,
+        order.partnerName ?? null,
         order.buyerPassportMainPath,
         order.buyerPassportResidencePath,
         order.buyerSelfiePath,
@@ -183,7 +191,7 @@ export async function getOrders(filters?: { status?: string; search?: string }):
     const term = `%${filters.search.toLowerCase()}%`
     params.push(term)
     const i = params.length
-    conditions.push(`(LOWER(id) LIKE $${i} OR LOWER(first_name) LIKE $${i} OR LOWER(last_name) LIKE $${i})`)
+    conditions.push(`(LOWER(id) LIKE $${i} OR LOWER(first_name) LIKE $${i} OR LOWER(last_name) LIKE $${i} OR LOWER(COALESCE(partner_name, '')) LIKE $${i})`)
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''

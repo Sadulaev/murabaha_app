@@ -4,6 +4,7 @@ import cors from 'cors'
 import path from 'path'
 import ordersRouter from './routes/orders'
 import adminRouter from './routes/admin'
+import partnersRouter from './routes/partners'
 import { initDb } from './services/db'
 import { startCleanupCron } from './services/cleanup'
 
@@ -12,7 +13,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
 }))
 
 // Request logger
@@ -36,6 +37,7 @@ app.get('/health', (_req, res) => {
 app.use('/uploads', express.static(path.join(process.cwd(), 'data', 'uploads')))
 app.use('/api/orders', ordersRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api/partners', partnersRouter)
 
 initDb()
   .then(() => {

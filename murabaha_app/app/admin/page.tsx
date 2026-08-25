@@ -1,11 +1,13 @@
 ﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
+import { buildPartnerLink } from "@/lib/partner";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const TOKEN_KEY = "murabaha_admin_token";
 
 type OrderStatus = "pending" | "in_progress" | "rejected";
+type AdminTab = "orders" | "partners";
 
 type Order = {
   id: string;
@@ -21,6 +23,8 @@ type Order = {
   monthlyPayment: number;
   summaryPayment: number;
   guarantorsCount: number;
+  partnerId?: string;
+  partnerName?: string;
   buyerPassportMainPath?: string;
   buyerPassportResidencePath?: string;
   buyerSelfiePath?: string;
@@ -28,6 +32,12 @@ type Order = {
   guarantor1PassportResidencePath?: string;
   guarantor2PassportMainPath?: string;
   guarantor2PassportResidencePath?: string;
+};
+
+type Partner = {
+  id: string;
+  name: string;
+  createdAt: string;
 };
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
@@ -213,7 +223,6 @@ function OrderCard({ order, token, onUpdated }: { order: Order; token: string; o
 
   return (
     <article style={{ border: "1px solid rgba(11,20,37,0.1)", borderRadius: "1rem", background: "#fff", overflow: "hidden" }}>
-      {/* Header row */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -223,6 +232,11 @@ function OrderCard({ order, token, onUpdated }: { order: Order; token: string; o
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
             <strong style={{ fontSize: "0.98rem" }}>{order.lastName} {order.firstName}</strong>
             <StatusBadge status={order.status} />
+            {order.partnerName && (
+              <span style={{ display: "inline-flex", alignItems: "center", borderRadius: 999, padding: "0.25rem 0.65rem", fontSize: "0.72rem", fontWeight: 700, background: "rgba(11,20,37,0.06)", color: "rgba(11,20,37,0.7)" }}>
+                {order.partnerName}
+              </span>
+            )}
           </div>
           <span style={{ display: "block", color: "rgba(11,20,37,0.52)", fontSize: "0.78rem", marginTop: "0.15rem" }}>{order.phone} · {formatDate(order.createdAt)}</span>
           <span style={{ display: "block", color: "rgba(11,20,37,0.35)", fontSize: "0.7rem", marginTop: "0.1rem", fontFamily: "monospace" }}>{order.id}</span>
@@ -236,7 +250,6 @@ function OrderCard({ order, token, onUpdated }: { order: Order; token: string; o
 
       {open && (
         <div style={{ padding: "0 1.1rem 1.1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {/* Financial details */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "0.55rem", fontSize: "0.82rem" }}>
             <MetaRow label="Стоимость товара" value={formatMoney(order.cost)} />
             <MetaRow label="Первый взнос" value={formatMoney(order.firstPayment)} />
@@ -244,9 +257,9 @@ function OrderCard({ order, token, onUpdated }: { order: Order; token: string; o
             <MetaRow label="Платёж в месяц" value={formatMoney(order.monthlyPayment)} />
             <MetaRow label="Итоговая сумма" value={formatMoney(order.summaryPayment)} />
             <MetaRow label="Первый платёж" value={new Date(order.firstPaymentDate).toLocaleDateString("ru-RU")} />
+            {order.partnerName && <MetaRow label="Партнёр" value={order.partnerName} />}
           </div>
 
-          {/* Status controls */}
           <div>
             <p style={{ margin: "0 0 0.5rem", fontSize: "0.78rem", fontWeight: 700, color: "rgba(11,20,37,0.5)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Статус</p>
             <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
@@ -273,7 +286,6 @@ function OrderCard({ order, token, onUpdated }: { order: Order; token: string; o
             </div>
           </div>
 
-          {/* Photos */}
           {photos.length > 0 && (
             <div>
               <p style={{ margin: "0 0 0.5rem", fontSize: "0.78rem", fontWeight: 700, color: "rgba(11,20,37,0.5)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Документы</p>
@@ -288,7 +300,6 @@ function OrderCard({ order, token, onUpdated }: { order: Order; token: string; o
             </div>
           )}
 
-          {/* Delete files */}
           {hasFiles && (
             <div>
               <button
@@ -321,13 +332,166 @@ function MetaRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+function PartnersPanel({ token, onUnauthorized }: { token: string; onUnauthorized: () => void }) {
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const loadPartners = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/partners`, {
+        headers: { "x-api-key": token },
+      });
+      if (res.status === 401) { onUnauthorized(); return; }
+      const data = (await res.json()) as Partner[];
+      setPartners(data);
+    } catch {
+      setError("Не удалось загрузить партнёров.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadPartners();
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setCreating(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/partners`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": token },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      const data = (await res.json()) as Partner | { error?: string };
+      if (!res.ok) {
+        setError((data as { error?: string }).error ?? "Не удалось создать партнёра.");
+        return;
+      }
+      setPartners((prev) => [data as Partner, ...prev]);
+      setName("");
+    } catch {
+      setError("Не удалось создать партнёра.");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleCopy = async (partnerId: string) => {
+    const link = buildPartnerLink(partnerId);
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedId(partnerId);
+      setTimeout(() => setCopiedId((current) => (current === partnerId ? null : current)), 2000);
+    } catch {
+      setError("Не удалось скопировать ссылку.");
+    }
+  };
+
+  const handleDelete = async (partner: Partner) => {
+    if (!confirm(`Удалить партнёра «${partner.name}»? Существующие заявки сохранят его имя.`)) return;
+    setDeletingId(partner.id);
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/partners/${partner.id}`, {
+        method: "DELETE",
+        headers: { "x-api-key": token },
+      });
+      if (res.status === 401) { onUnauthorized(); return; }
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        setError(data.error ?? "Не удалось удалить партнёра.");
+        return;
+      }
+      setPartners((prev) => prev.filter((p) => p.id !== partner.id));
+    } catch {
+      setError("Не удалось удалить партнёра.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <form onSubmit={(e) => void handleCreate(e)} style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "flex-end", border: "1px solid rgba(11,20,37,0.1)", borderRadius: "1rem", background: "#fff", padding: "1rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", flex: "1 1 220px" }}>
+          <label style={{ fontSize: "0.76rem", fontWeight: 700, color: "rgba(11,20,37,0.55)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Название партнёра</label>
+          <input
+            type="text"
+            placeholder="Например, Магазин Ахмад"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={120}
+            style={{ ...inputStyle, width: "100%", fontSize: "0.84rem", padding: "0.5rem 0.7rem" }}
+            required
+          />
+        </div>
+        <button type="submit" disabled={creating || !name.trim()} style={{ border: 0, borderRadius: 999, padding: "0.5rem 1rem", background: "var(--ink)", color: "var(--paper-strong)", fontWeight: 700, fontSize: "0.82rem", cursor: creating ? "wait" : "pointer" }}>
+          {creating ? "Создаём..." : "Добавить"}
+        </button>
+      </form>
+
+      {error && <p style={{ color: "#c93f2d", fontSize: "0.9rem", margin: 0 }}>{error}</p>}
+      {loading && <p style={{ textAlign: "center", color: "rgba(11,20,37,0.5)", padding: "2rem 0" }}>Загрузка партнёров...</p>}
+      {!loading && partners.length === 0 && (
+        <p style={{ textAlign: "center", color: "rgba(11,20,37,0.5)", padding: "2rem 0" }}>Партнёров пока нет.</p>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+        {partners.map((partner) => {
+          const link = buildPartnerLink(partner.id);
+          return (
+            <article key={partner.id} style={{ border: "1px solid rgba(11,20,37,0.1)", borderRadius: "1rem", background: "#fff", padding: "0.95rem 1.1rem", display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", alignItems: "flex-start" }}>
+                <div style={{ minWidth: 0 }}>
+                  <strong style={{ fontSize: "1rem" }}>{partner.name}</strong>
+                  <span style={{ display: "block", color: "rgba(11,20,37,0.45)", fontSize: "0.76rem", marginTop: "0.15rem" }}>
+                    Создан {formatDate(partner.createdAt)} · ID {partner.id}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                  <button type="button" onClick={() => void handleCopy(partner.id)} style={ghostBtnStyle}>
+                    {copiedId === partner.id ? "Скопировано" : "Копировать ссылку"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deletingId === partner.id}
+                    onClick={() => void handleDelete(partner)}
+                    style={{ ...ghostBtnStyle, color: "#c93f2d" }}
+                  >
+                    {deletingId === partner.id ? "Удаляем..." : "Удалить"}
+                  </button>
+                </div>
+              </div>
+              <code style={{ display: "block", fontSize: "0.74rem", color: "rgba(11,20,37,0.55)", background: "rgba(11,20,37,0.04)", borderRadius: "0.65rem", padding: "0.55rem 0.7rem", wordBreak: "break-all" }}>
+                {link}
+              </code>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [token, setToken] = useState<string | null>(null);
+  const [tab, setTab] = useState<AdminTab>("orders");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Filter state
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [filterSearch, setFilterSearch] = useState<string>("");
   const [searchInput, setSearchInput] = useState<string>("");
@@ -338,6 +502,11 @@ export default function AdminPage() {
     const saved = sessionStorage.getItem(TOKEN_KEY);
     if (saved) setToken(saved);
   }, []);
+
+  const handleUnauthorized = () => {
+    sessionStorage.removeItem(TOKEN_KEY);
+    setToken(null);
+  };
 
   const loadOrders = async (tok: string, status?: string, search?: string) => {
     if (loadedRef.current) return;
@@ -352,7 +521,7 @@ export default function AdminPage() {
       const res = await fetch(`${API_URL}/api/admin/orders${qs}`, {
         headers: { "x-api-key": tok },
       });
-      if (res.status === 401) { sessionStorage.removeItem(TOKEN_KEY); setToken(null); return; }
+      if (res.status === 401) { handleUnauthorized(); return; }
       const data = (await res.json()) as Order[];
       setOrders(data);
     } catch {
@@ -369,8 +538,8 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (token) void loadOrders(token);
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (token && tab === "orders") void loadOrders(token);
+  }, [token, tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleApplyFilters = () => {
     setFilterSearch(searchInput);
@@ -406,73 +575,103 @@ export default function AdminPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--paper)", fontFamily: "var(--font-sans)", color: "var(--ink)" }}>
-      {/* Header */}
-      <header style={{ position: "sticky", top: 0, zIndex: 20, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1.5rem", borderBottom: "1px solid rgba(11,20,37,0.1)", background: "rgba(245,236,223,0.94)", backdropFilter: "blur(12px)", gap: "1rem" }}>
-        <strong style={{ fontSize: "1rem", letterSpacing: "-0.03em" }}>Murabaha · Заявки</strong>
+      <header style={{ position: "sticky", top: 0, zIndex: 20, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1.5rem", borderBottom: "1px solid rgba(11,20,37,0.1)", background: "rgba(245,236,223,0.94)", backdropFilter: "blur(12px)", gap: "1rem", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem", flexWrap: "wrap" }}>
+          <strong style={{ fontSize: "1rem", letterSpacing: "-0.03em" }}>Murabaha · Админ</strong>
+          <div style={{ display: "flex", gap: "0.3rem" }}>
+            {([
+              { id: "orders" as const, label: "Заявки" },
+              { id: "partners" as const, label: "Партнёры" },
+            ]).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setTab(item.id)}
+                style={{
+                  border: 0,
+                  borderRadius: 999,
+                  padding: "0.35rem 0.8rem",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  background: tab === item.id ? "var(--ink)" : "transparent",
+                  color: tab === item.id ? "var(--paper-strong)" : "rgba(11,20,37,0.55)",
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
-          <span style={{ color: "rgba(11,20,37,0.5)", fontSize: "0.82rem" }}>{orders.length} заявок</span>
-          <button type="button" onClick={() => reload()} style={ghostBtnStyle}>Обновить</button>
+          {tab === "orders" && <span style={{ color: "rgba(11,20,37,0.5)", fontSize: "0.82rem" }}>{orders.length} заявок</span>}
+          {tab === "orders" && <button type="button" onClick={() => reload()} style={ghostBtnStyle}>Обновить</button>}
           <button type="button" onClick={handleLogout} style={{ ...ghostBtnStyle, color: "#c93f2d" }}>Выйти</button>
         </div>
       </header>
 
-      {/* Filters */}
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "1rem 1rem 0" }}>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "flex-end" }}>
-          {/* Search input */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", flex: "1 1 200px" }}>
-            <label style={{ fontSize: "0.76rem", fontWeight: 700, color: "rgba(11,20,37,0.55)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Поиск (ID / Имя / Фамилия)</label>
-            <input
-              type="text"
-              placeholder="Введите запрос..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
-              style={{ ...inputStyle, width: "100%", fontSize: "0.84rem", padding: "0.5rem 0.7rem" }}
-            />
-          </div>
+      {tab === "orders" && (
+        <div style={{ maxWidth: 860, margin: "0 auto", padding: "1rem 1rem 0" }}>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", flex: "1 1 200px" }}>
+              <label style={{ fontSize: "0.76rem", fontWeight: 700, color: "rgba(11,20,37,0.55)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Поиск (ID / Имя / Фамилия / Партнёр)</label>
+              <input
+                type="text"
+                placeholder="Введите запрос..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
+                style={{ ...inputStyle, width: "100%", fontSize: "0.84rem", padding: "0.5rem 0.7rem" }}
+              />
+            </div>
 
-          {/* Status filter */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <label style={{ fontSize: "0.76rem", fontWeight: 700, color: "rgba(11,20,37,0.55)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Статус</label>
-            <select
-              value={filterStatus}
-              onChange={(e) => handleStatusFilter(e.target.value)}
-              style={{ ...inputStyle, width: "auto", fontSize: "0.84rem", padding: "0.5rem 0.7rem", cursor: "pointer" }}
-            >
-              <option value="">Все статусы</option>
-              <option value="pending">В обработке</option>
-              <option value="in_progress">Принято в работу</option>
-              <option value="rejected">Отклонено</option>
-            </select>
-          </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+              <label style={{ fontSize: "0.76rem", fontWeight: 700, color: "rgba(11,20,37,0.55)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Статус</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => handleStatusFilter(e.target.value)}
+                style={{ ...inputStyle, width: "auto", fontSize: "0.84rem", padding: "0.5rem 0.7rem", cursor: "pointer" }}
+              >
+                <option value="">Все статусы</option>
+                <option value="pending">В обработке</option>
+                <option value="in_progress">Принято в работу</option>
+                <option value="rejected">Отклонено</option>
+              </select>
+            </div>
 
-          {/* Actions */}
-          <div style={{ display: "flex", gap: "0.4rem", alignSelf: "flex-end" }}>
-            <button type="button" onClick={handleApplyFilters} style={{ border: 0, borderRadius: 999, padding: "0.5rem 1rem", background: "var(--ink)", color: "var(--paper-strong)", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer" }}>
-              Найти
-            </button>
-            {(filterStatus || filterSearch) && (
-              <button type="button" onClick={handleReset} style={{ ...ghostBtnStyle, fontSize: "0.82rem" }}>
-                Сбросить
+            <div style={{ display: "flex", gap: "0.4rem", alignSelf: "flex-end" }}>
+              <button type="button" onClick={handleApplyFilters} style={{ border: 0, borderRadius: 999, padding: "0.5rem 1rem", background: "var(--ink)", color: "var(--paper-strong)", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer" }}>
+                Найти
               </button>
-            )}
+              {(filterStatus || filterSearch) && (
+                <button type="button" onClick={handleReset} style={{ ...ghostBtnStyle, fontSize: "0.82rem" }}>
+                  Сбросить
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Content */}
       <main style={{ maxWidth: 860, margin: "0 auto", padding: "1rem 1rem 2rem" }}>
-        {loading && <p style={{ textAlign: "center", color: "rgba(11,20,37,0.5)", padding: "3rem 0" }}>Загрузка заявок...</p>}
-        {fetchError && <p style={{ color: "#c93f2d", fontSize: "0.9rem", textAlign: "center" }}>{fetchError}</p>}
-        {!loading && !fetchError && orders.length === 0 && (
-          <p style={{ textAlign: "center", color: "rgba(11,20,37,0.5)", padding: "3rem 0" }}>Заявок не найдено.</p>
+        {tab === "orders" && (
+          <>
+            {loading && <p style={{ textAlign: "center", color: "rgba(11,20,37,0.5)", padding: "3rem 0" }}>Загрузка заявок...</p>}
+            {fetchError && <p style={{ color: "#c93f2d", fontSize: "0.9rem", textAlign: "center" }}>{fetchError}</p>}
+            {!loading && !fetchError && orders.length === 0 && (
+              <p style={{ textAlign: "center", color: "rgba(11,20,37,0.5)", padding: "3rem 0" }}>Заявок не найдено.</p>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+              {orders.map((order) => (
+                <OrderCard key={order.id} order={order} token={token} onUpdated={handleOrderUpdated} />
+              ))}
+            </div>
+          </>
         )}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-          {orders.map((order) => (
-            <OrderCard key={order.id} order={order} token={token} onUpdated={handleOrderUpdated} />
-          ))}
-        </div>
+
+        {tab === "partners" && (
+          <PartnersPanel token={token} onUnauthorized={handleUnauthorized} />
+        )}
       </main>
     </div>
   );

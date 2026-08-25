@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import multer from 'multer'
 import type { OrderFilesInput, OrderInput, UploadedFile } from '../types/order'
 import { saveOrder, getOrders } from '../services/storage'
+import { getPartnerById } from '../services/partners'
 import { notifyNewOrder } from '../services/telegram'
 
 const router = Router()
@@ -54,6 +55,8 @@ function normalizeOrderInput(body: Record<string, unknown>): OrderInput | { erro
   const guarantor2Phone = typeof body.guarantor2Phone === 'string' ? body.guarantor2Phone.trim() : undefined
   const storeName = typeof body.storeName === 'string' ? body.storeName.trim() || undefined : undefined
   const sellerPhone = typeof body.sellerPhone === 'string' ? body.sellerPhone.trim() || undefined : undefined
+  const partnerId = typeof body.partnerId === 'string' ? body.partnerId.trim() || undefined : undefined
+  const partnerName = typeof body.partnerName === 'string' ? body.partnerName.trim() || undefined : undefined
   const cost = parseNumber(body.cost)
   const firstPayment = parseNumber(body.firstPayment)
   const period = parseNumber(body.period)
@@ -91,6 +94,8 @@ function normalizeOrderInput(body: Record<string, unknown>): OrderInput | { erro
     guarantor2Phone,
     storeName,
     sellerPhone,
+    partnerId,
+    partnerName,
   }
 }
 
@@ -157,6 +162,15 @@ router.post('/', uploadFields, async (req: Request, res: Response): Promise<void
 
   let order
   try {
+    // Prefer canonical partner name from DB when partnerId is known
+    if (normalized.partnerId) {
+      const partner = await getPartnerById(normalized.partnerId)
+      if (partner) {
+        normalized.partnerId = partner.id
+        normalized.partnerName = partner.name
+      }
+    }
+
     order = await saveOrder(normalized, validatedFiles)
     console.log(`[orders] Order saved: ${order.id}`)
   } catch (err) {

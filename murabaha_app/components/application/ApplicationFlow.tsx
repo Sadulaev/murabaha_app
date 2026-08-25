@@ -13,6 +13,7 @@ import {
   type PersonalDetails,
   type UploadValue,
 } from "@/lib/application-flow";
+import { loadStoredPartner } from "@/lib/partner";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { BuyerDocumentsStep } from "./BuyerDocumentsStep";
 import { GuarantorDocumentsStep } from "./GuarantorDocumentsStep";
@@ -323,6 +324,12 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
     if (calculation.guarantorsCount === 2) {
       formData.append("guarantor2PassportMain", uploads.guarantor2PassportMain!.file);
       formData.append("guarantor2PassportResidence", uploads.guarantor2PassportResidence!.file);
+    }
+
+    const partner = loadStoredPartner();
+    if (partner) {
+      formData.append("partnerId", partner.id);
+      formData.append("partnerName", partner.name);
     }
 
     setSubmitting(true);

@@ -69,4 +69,20 @@ export async function initDb(): Promise<void> {
   await db.query(`
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS seller_phone TEXT
   `)
+
+  // Migration: partner referral on orders
+  await db.query(`
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS partner_id TEXT
+  `)
+  await db.query(`
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS partner_name TEXT
+  `)
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS partners (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL
+    )
+  `)
 }

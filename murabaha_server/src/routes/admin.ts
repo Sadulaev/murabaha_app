@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { deleteOrderFiles, getOrders, updateOrderStatus } from '../services/storage'
+import { createPartner, deletePartner, getPartners } from '../services/partners'
 import type { OrderStatus } from '../types/order'
 
 const router = Router()
@@ -106,6 +107,73 @@ router.delete('/orders/:id/files', async (req: Request, res: Response): Promise<
   } catch (err) {
     console.error('Failed to delete order files:', err)
     res.status(500).json({ error: 'Failed to delete files' })
+  }
+})
+
+// GET /api/admin/partners — list partners
+router.get('/partners', async (req: Request, res: Response): Promise<void> => {
+  if (!verifyToken(req)) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  try {
+    const partners = await getPartners()
+    res.json(partners)
+  } catch (err) {
+    console.error('Failed to read partners:', err)
+    res.status(500).json({ error: 'Failed to read partners' })
+  }
+})
+
+// POST /api/admin/partners — create partner
+router.post('/partners', async (req: Request, res: Response): Promise<void> => {
+  if (!verifyToken(req)) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  const body = req.body as Record<string, unknown>
+  const name = typeof body.name === 'string' ? body.name.trim() : ''
+
+  if (!name) {
+    res.status(400).json({ error: 'Укажите название партнёра.' })
+    return
+  }
+
+  if (name.length > 120) {
+    res.status(400).json({ error: 'Название партнёра слишком длинное.' })
+    return
+  }
+
+  try {
+    const partner = await createPartner({ name })
+    res.status(201).json(partner)
+  } catch (err) {
+    console.error('Failed to create partner:', err)
+    res.status(500).json({ error: 'Failed to create partner' })
+  }
+})
+
+// DELETE /api/admin/partners/:id — delete partner
+router.delete('/partners/:id', async (req: Request, res: Response): Promise<void> => {
+  if (!verifyToken(req)) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  const { id } = req.params
+
+  try {
+    const ok = await deletePartner(id)
+    if (!ok) {
+      res.status(404).json({ error: 'Партнёр не найден.' })
+      return
+    }
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Failed to delete partner:', err)
+    res.status(500).json({ error: 'Failed to delete partner' })
   }
 })
 

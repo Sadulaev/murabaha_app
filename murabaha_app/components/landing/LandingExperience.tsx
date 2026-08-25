@@ -3,9 +3,11 @@
 import { useCallback } from "react";
 import { BrandMark } from "./BrandMark";
 import { NavigationDots } from "./NavigationDots";
+import { PartnerBadge } from "./PartnerBadge";
 import { CalculatorSection } from "./sections/CalculatorSection";
 import { ConditionsSection } from "./sections/ConditionsSection";
 import { ContactsSection } from "./sections/ContactsSection";
+import { usePartnerReferral } from "@/hooks/usePartnerReferral";
 import { useSectionNavigator } from "@/hooks/useSectionNavigator";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import styles from "./LandingExperience.module.css";
@@ -16,6 +18,7 @@ const SECTION_IDS = ["section-conditions", "section-calculator", "section-contac
 export function LandingExperience() {
   const { activeIndex, navigateTo, handleWheel, handleTouchEnd, handleTouchMove, handleTouchStart } =
     useSectionNavigator(SECTION_COUNT);
+  const partner = usePartnerReferral();
 
   const isMobile = useMediaQuery("(max-width: 740px)");
 
@@ -38,6 +41,7 @@ export function LandingExperience() {
       onTouchStart={isMobile ? undefined : handleTouchStart}
     >
       {!isMobile && <NavigationDots activeIndex={activeIndex} onSelect={handleNavigate} />}
+      {partner && <PartnerBadge name={partner.name} />}
 
       <div
         className={styles.track}
