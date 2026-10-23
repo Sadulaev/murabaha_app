@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { apiUrl } from "@/lib/api";
 import {
   loadStoredPartner,
   saveStoredPartner,
   type StoredPartner,
 } from "@/lib/partner";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 /**
  * Captures partner from ?p= URL param into localStorage (overwrite only).
@@ -29,7 +28,7 @@ export function usePartnerReferral(): StoredPartner | null {
 
     const resolve = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/partners/${encodeURIComponent(partnerParam)}`);
+        const res = await fetch(apiUrl(`/api/partners/${encodeURIComponent(partnerParam)}`));
         if (!res.ok) return;
         const data = (await res.json()) as { id?: string; name?: string };
         if (!data.id || !data.name || cancelled) return;

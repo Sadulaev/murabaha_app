@@ -13,6 +13,7 @@ import {
   type PersonalDetails,
   type UploadValue,
 } from "@/lib/application-flow";
+import { apiUrl } from "@/lib/api";
 import { loadStoredPartner } from "@/lib/partner";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { BuyerDocumentsStep } from "./BuyerDocumentsStep";
@@ -337,7 +338,7 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
     setSubmitError(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/api/orders`, {
+      const response = await fetch(apiUrl("/api/orders"), {
         method: "POST",
         body: formData,
       });

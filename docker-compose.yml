@@ -42,18 +42,28 @@ services:
   murabaha_app:
     build:
       context: ./murabaha_app
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: murabaha_app
     restart: unless-stopped
-    # depends_on:
-    #   murabaha_server:
-    #     condition: service_started
+    depends_on:
+      murabaha_server:
+        condition: service_started
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      CERTBOT_EMAIL: ${CERTBOT_EMAIL:-}
     ports:
-      - "3000:3000"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
 volumes:
   murabaha_db_data:
   murabaha_server_data:
+  certbot_www:
+  certbot_conf:

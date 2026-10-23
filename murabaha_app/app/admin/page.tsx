@@ -1,9 +1,8 @@
 ﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
+import { apiUrl } from "@/lib/api";
 import { buildPartnerLink } from "@/lib/partner";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const TOKEN_KEY = "murabaha_admin_token";
 
 type OrderStatus = "pending" | "in_progress" | "rejected";
@@ -64,7 +63,7 @@ function formatDate(iso: string) {
 }
 
 function imageUrl(relativePath: string) {
-  return `${API_URL}/${relativePath}`;
+  return apiUrl(relativePath);
 }
 
 function PhotoThumb({ path, label }: { path: string | undefined; label: string }) {
@@ -111,7 +110,7 @@ function LoginForm({ onLogin }: { onLogin: (token: string) => void }) {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/admin/login`, {
+      const res = await fetch(apiUrl("/api/admin/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -184,7 +183,7 @@ function OrderCard({ order, token, onUpdated }: { order: Order; token: string; o
     setStatusLoading(true);
     setActionError(null);
     try {
-      const res = await fetch(`${API_URL}/api/admin/orders/${order.id}/status`, {
+      const res = await fetch(apiUrl(`/api/admin/orders/${order.id}/status`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json", "x-api-key": token },
         body: JSON.stringify({ status: newStatus }),
@@ -204,7 +203,7 @@ function OrderCard({ order, token, onUpdated }: { order: Order; token: string; o
     setDeleteLoading(true);
     setActionError(null);
     try {
-      const res = await fetch(`${API_URL}/api/admin/orders/${order.id}/files`, {
+      const res = await fetch(apiUrl(`/api/admin/orders/${order.id}/files`), {
         method: "DELETE",
         headers: { "x-api-key": token },
       });
@@ -345,7 +344,7 @@ function PartnersPanel({ token, onUnauthorized }: { token: string; onUnauthorize
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/api/admin/partners`, {
+      const res = await fetch(apiUrl("/api/admin/partners"), {
         headers: { "x-api-key": token },
       });
       if (res.status === 401) { onUnauthorized(); return; }
@@ -369,7 +368,7 @@ function PartnersPanel({ token, onUnauthorized }: { token: string; onUnauthorize
     setCreating(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/api/admin/partners`, {
+      const res = await fetch(apiUrl("/api/admin/partners"), {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-api-key": token },
         body: JSON.stringify({ name: trimmed }),
@@ -404,7 +403,7 @@ function PartnersPanel({ token, onUnauthorized }: { token: string; onUnauthorize
     setDeletingId(partner.id);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/api/admin/partners/${partner.id}`, {
+      const res = await fetch(apiUrl(`/api/admin/partners/${partner.id}`), {
         method: "DELETE",
         headers: { "x-api-key": token },
       });
@@ -518,7 +517,7 @@ export default function AdminPage() {
       if (status) params.set("status", status);
       if (search) params.set("search", search);
       const qs = params.toString() ? `?${params.toString()}` : "";
-      const res = await fetch(`${API_URL}/api/admin/orders${qs}`, {
+      const res = await fetch(apiUrl(`/api/admin/orders${qs}`), {
         headers: { "x-api-key": tok },
       });
       if (res.status === 401) { handleUnauthorized(); return; }
