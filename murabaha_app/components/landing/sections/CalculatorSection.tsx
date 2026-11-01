@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ApplicationFlow } from "@/components/application/ApplicationFlow";
 import { AnimatedText } from "../AnimatedText";
 import {
   MAX_COST,
   MIN_COST,
+  PERIOD_OPTIONS,
   calculateInstallment,
   costToSlider,
   getMaxPeriod,
   roundToNearestHundred,
   sliderToCost,
+  snapPeriod,
 } from "@/lib/calculator";
 import { getGuarantorsCount } from "@/lib/application-flow";
 import styles from "./CalculatorSection.module.css";
@@ -23,6 +25,14 @@ type CalculatorSectionProps = {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function formatMonths(value: number) {
+  const mod10 = value % 10;
+  const mod100 = value % 100;
+  if (mod10 === 1 && mod100 !== 11) return "месяц";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "месяца";
+  return "месяцев";
 }
 
 function parseDigits(value: string) {
@@ -41,14 +51,9 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
   const [cost, setCost] = useState(120000);
   const [firstPayment, setFirstPayment] = useState(30000);
   const [period, setPeriod] = useState(6);
-  const [periodInput, setPeriodInput] = useState("6");
   const [flowStep, setFlowStep] = useState(1);
 
   const maxPeriod = getMaxPeriod(cost, firstPayment);
-
-  useEffect(() => {
-    setPeriodInput(String(period));
-  }, [period]);
 
   const result = useMemo(
     () => calculateInstallment({ cost, firstPayment, period, encryptedRate }),
@@ -73,7 +78,7 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
     if (newFirstPayment !== firstPayment) setFirstPayment(newFirstPayment);
 
     const newMax = getMaxPeriod(sanitizedCost, newFirstPayment);
-    if (period > newMax) setPeriod(newMax);
+    if (period > newMax) setPeriod(snapPeriod(period, newMax));
   };
 
   const handleFirstPaymentChange = (nextPayment: number) => {
@@ -85,26 +90,19 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
     setFirstPayment(cappedPayment);
 
     const newMax = getMaxPeriod(cost, cappedPayment);
-    if (period > newMax) setPeriod(newMax);
+    if (period > newMax) setPeriod(snapPeriod(period, newMax));
   };
 
   const handlePeriodChange = (nextPeriod: number) => {
-    if (!Number.isFinite(nextPeriod)) {
+    if (nextPeriod > maxPeriod || nextPeriod === period) {
       return;
     }
 
-    const sanitizedPeriod = clamp(Math.round(nextPeriod), 1, maxPeriod);
-    setPeriod(sanitizedPeriod);
+    setPeriod(nextPeriod);
 
     if (firstPayment < cost * 0.25) {
       setFirstPayment(roundToNearestHundred(cost * 0.25));
     }
-  };
-
-  const commitPeriodInput = (value: string) => {
-    const sanitizedPeriod = clamp(parseDigits(value), 1, maxPeriod);
-    setPeriodInput(String(sanitizedPeriod));
-    handlePeriodChange(sanitizedPeriod);
   };
 
   return (
@@ -174,32 +172,48 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
                 </div>
               </label>
 
-              <label className={styles.field}>
-                <span className={styles.fieldLabel}>Срок рассрочки</span>
-                <div className={styles.inputRow}>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={periodInput}
-                    onChange={(event) => setPeriodInput(event.target.value.replace(/\D/g, ""))}
-                    onBlur={(event) => commitPeriodInput(event.target.value)}
-                  />
-                  <span>мес.</span>
+              <div className={styles.field} role="radiogroup" aria-labelledby="period-label">
+                <span id="period-label" className={styles.fieldLabel}>
+                  Срок рассрочки
+                </span>
+                <div className={styles.periodGroup}>
+                  {PERIOD_OPTIONS.map((option) => {
+                    const disabled = option > maxPeriod;
+                    const selected = option === period;
+                    return (
+                      <label
+                        key={option}
+                        className={[
+                          styles.periodOption,
+                          selected ? styles.periodOptionActive : "",
+                          disabled ? styles.periodOptionDisabled : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                      >
+                        <input
+                          type="radio"
+                          name="period"
+                          className="srOnly"
+                          value={option}
+                          checked={selected}
+                          disabled={disabled}
+                          onChange={() => handlePeriodChange(option)}
+                        />
+                        <span className={styles.periodValue}>{option}</span>
+                        <span className={styles.periodUnit}>{formatMonths(option)}</span>
+                      </label>
+                    );
+                  })}
                 </div>
-                <input
-                  className={styles.range}
-                  type="range"
-                  min={1}
-                  max={maxPeriod}
-                  step={1}
-                  value={Math.min(period, maxPeriod)}
-                  onChange={(event) => handlePeriodChange(Number(event.target.value))}
-                />
-                <div className={styles.fieldMeta}>
-                  <span>1</span>
-                  <span>{maxPeriod}</span>
-                </div>
-              </label>
+                {maxPeriod < PERIOD_OPTIONS[PERIOD_OPTIONS.length - 1] && (
+                  <span className={styles.periodHint}>
+                    {cost < 50000
+                      ? "При стоимости до 50 000 руб доступно до 6 месяцев."
+                      : "Без первоначального взноса доступно до 6 месяцев."}
+                  </span>
+                )}
+              </div>
             </AnimatedText>
           </div>
 

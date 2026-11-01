@@ -1,12 +1,20 @@
 export const MIN_COST = 10000;
 export const MAX_COST = 300000;
 export const MAX_PERIOD = 12;
+export const PERIOD_OPTIONS = [3, 6, 9, 12] as const;
 
 /** Dynamic max installment period based on cost and down-payment amount. */
 export function getMaxPeriod(cost: number, firstPayment: number): number {
   if (cost < 50000) return 6;
   if (firstPayment === 0) return 8;
   return 12;
+}
+
+/** Largest allowed period option not exceeding both `period` and `maxPeriod`. */
+export function snapPeriod(period: number, maxPeriod: number): number {
+  const limit = Math.min(period, maxPeriod);
+  const allowed = PERIOD_OPTIONS.filter((option) => option <= limit);
+  return allowed.length > 0 ? allowed[allowed.length - 1] : PERIOD_OPTIONS[0];
 }
 
 export type CalculationResult = {
