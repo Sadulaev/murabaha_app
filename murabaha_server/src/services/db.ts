@@ -85,4 +85,34 @@ export async function initDb(): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL
     )
   `)
+
+  // Product categories: global (partner_id IS NULL) or per-partner catalogs
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS product_categories (
+      id TEXT PRIMARY KEY,
+      partner_id TEXT REFERENCES partners(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      include_first_payment_in_markup BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMPTZ NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL
+    )
+  `)
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_product_categories_partner
+    ON product_categories (partner_id)
+  `)
+
+  // Per-term (month) calculator settings for a category — Excel-like table rows
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS category_term_settings (
+      category_id TEXT NOT NULL REFERENCES product_categories(id) ON DELETE CASCADE,
+      months INTEGER NOT NULL CHECK (months >= 1 AND months <= 24),
+      markup_percent NUMERIC(8, 4),
+      min_down_payment_percent NUMERIC(8, 4),
+      PRIMARY KEY (category_id, months)
+    )
+  `)
 }

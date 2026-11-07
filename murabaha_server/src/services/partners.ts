@@ -45,6 +45,7 @@ export async function getPartnerById(id: string): Promise<Partner | null> {
 
 export async function deletePartner(id: string): Promise<boolean> {
   const db = getDb()
+  // product_categories.partner_id has ON DELETE CASCADE → term settings cascade too
   const result = await db.query(`DELETE FROM partners WHERE id = $1`, [id]) as unknown as { rowCount: number }
   return result.rowCount > 0
 }
