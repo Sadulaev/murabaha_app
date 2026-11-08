@@ -1,21 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ApplicationFlow } from "@/components/application/ApplicationFlow";
 import { AnimatedText } from "../AnimatedText";
 import {
-  FALLBACK_CATEGORY_ID,
   MAX_COST,
   MIN_COST,
   calculateInstallment,
   costToSlider,
+  getGuarantorsCount,
   getMaxFirstPayment,
   getMinFirstPayment,
   roundToNearestHundred,
   sliderToCost,
   snapToTerm,
 } from "@/lib/calculator";
-import { getGuarantorsCount } from "@/lib/application-flow";
 import { useCalculatorConfig } from "@/hooks/useCalculatorConfig";
 import styles from "./CalculatorSection.module.css";
 
@@ -59,7 +57,6 @@ export function CalculatorSection({ active, onNext, partnerId, partnerReady }: C
   // What the user asked for; the effective value is clamped to the selected term's limits.
   const [desiredFirstPayment, setDesiredFirstPayment] = useState(30000);
   const [desiredPeriod, setDesiredPeriod] = useState(6);
-  const [flowStep, setFlowStep] = useState(1);
 
   const category = categories.find((item) => item.id === categoryId) ?? categories[0];
   const terms = category.terms;
@@ -84,8 +81,6 @@ export function CalculatorSection({ active, onNext, partnerId, partnerReady }: C
   );
 
   const guarantorsCount = getGuarantorsCount(cost);
-  const expandedFlow = flowStep > 1;
-  const isRealCategory = category.id !== FALLBACK_CATEGORY_ID;
 
   const handleCostChange = (nextCost: number) => {
     if (!Number.isFinite(nextCost)) return;
@@ -109,8 +104,8 @@ export function CalculatorSection({ active, onNext, partnerId, partnerReady }: C
   return (
     <>
       <div className={styles.section}>
-        <div className={expandedFlow ? `${styles.shell} ${styles.shellExpanded}` : styles.shell}>
-          <div className={styles.formColumn} aria-hidden={expandedFlow}>
+        <div className={styles.shell}>
+          <div className={styles.formColumn}>
             <AnimatedText as="span" active={active} delay={0} className={styles.eyebrow}>
               Калькулятор
             </AnimatedText>
@@ -238,29 +233,58 @@ export function CalculatorSection({ active, onNext, partnerId, partnerReady }: C
             </AnimatedText>
           </div>
 
-          <div className={expandedFlow ? `${styles.resultColumn} ${styles.resultColumnExpanded}` : styles.resultColumn}>
-            <AnimatedText
-              as="div"
-              active={active}
-              delay={260}
-              className={expandedFlow ? `${styles.resultCard} ${styles.resultCardExpanded}` : styles.resultCard}
-            >
-              <ApplicationFlow
-                calculation={{
-                  cost,
-                  firstPayment,
-                  period,
-                  monthlyPayment: result.monthlyPayment,
-                  monthlyAdditionalPayment: result.monthlyAdditionalPayment,
-                  summaryPayment: result.summaryPayment,
-                  guarantorsCount,
-                  categoryId: isRealCategory ? category.id : undefined,
-                  categoryName: isRealCategory ? category.name : undefined,
-                }}
-                onContacts={onNext}
-                onStepChange={setFlowStep}
-                expanded={expandedFlow}
-              />
+          <div className={styles.resultColumn}>
+            <AnimatedText as="div" active={active} delay={260} className={styles.resultCard}>
+              <div className={styles.resultBody}>
+                <div className={styles.resultHeader}>
+                  <span className={styles.resultLabel}>Ежемесячный платёж</span>
+                  <strong className={styles.resultValue}>{formatAmount(result.monthlyPayment)} руб</strong>
+                </div>
+
+                <div className={styles.resultGrid}>
+                  <div className={styles.summaryCard}>
+                    <span>Итоговая сумма</span>
+                    <strong>{formatAmount(result.summaryPayment)} руб</strong>
+                  </div>
+                  <div className={styles.summaryCard}>
+                    <span>Переплата в месяц</span>
+                    <strong>{formatAmount(result.monthlyAdditionalPayment)} руб</strong>
+                  </div>
+                </div>
+
+                <div className={styles.selectionList}>
+                  {categories.length > 1 && (
+                    <div>
+                      <span>Категория</span>
+                      <strong>{category.name}</strong>
+                    </div>
+                  )}
+                  <div>
+                    <span>Стоимость товара</span>
+                    <strong>{formatAmount(cost)} руб</strong>
+                  </div>
+                  <div>
+                    <span>Первый взнос</span>
+                    <strong>{formatAmount(firstPayment)} руб</strong>
+                  </div>
+                  <div>
+                    <span>Срок</span>
+                    <strong>
+                      {period} {formatMonths(period)}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>Поручителей</span>
+                    <strong>{guarantorsCount}</strong>
+                  </div>
+                </div>
+
+                <p className={styles.note}>Расчёт предварительный. Точные условия уточняйте у менеджера.</p>
+
+                <button type="button" className={styles.primaryButton} onClick={onNext}>
+                  Связаться с нами
+                </button>
+              </div>
             </AnimatedText>
           </div>
         </div>

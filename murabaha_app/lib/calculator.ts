@@ -60,6 +60,10 @@ export type CalculationResult = {
   markupPercent: number;
 };
 
+export function getGuarantorsCount(cost: number) {
+  return cost <= 100000 ? 1 : 2;
+}
+
 export function roundToNearestHundred(value: number): number {
   return Math.round(value / 100) * 100;
 }
