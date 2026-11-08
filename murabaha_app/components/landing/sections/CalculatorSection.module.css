@@ -180,26 +180,48 @@
   font-size: 0.82rem;
 }
 
-.periodGroup {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.range:disabled {
+  opacity: 0.45;
+}
+
+.fieldHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.fieldValue {
+  color: var(--paper-strong);
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.categoryGroup {
+  display: flex;
   gap: 0.35rem;
+  overflow-x: auto;
   border: 1px solid rgba(255, 248, 239, 0.08);
   border-radius: var(--radius-lg);
   padding: 0.35rem;
   background: rgba(255, 248, 239, 0.04);
+  scrollbar-width: none;
 }
 
-.periodOption {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.1rem;
-  min-height: 3.4rem;
+.categoryGroup::-webkit-scrollbar {
+  display: none;
+}
+
+.categoryOption {
+  flex: 1 0 auto;
   border-radius: calc(var(--radius-lg) - 0.35rem);
-  padding: 0.45rem 0.25rem;
+  padding: 0.62rem 0.95rem;
   color: rgba(255, 248, 239, 0.72);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -210,38 +232,20 @@
     box-shadow 180ms ease;
 }
 
-.periodOption:hover {
+.categoryOption:hover {
   background: rgba(255, 248, 239, 0.07);
   color: var(--paper-strong);
 }
 
-.periodOption:has(input:focus-visible) {
+.categoryOption:has(input:focus-visible) {
   box-shadow: 0 0 0 2px var(--sun);
 }
 
-.periodOptionActive,
-.periodOptionActive:hover {
+.categoryOptionActive,
+.categoryOptionActive:hover {
   background: var(--ember);
   color: var(--paper-strong);
   box-shadow: 0 10px 24px rgba(239, 111, 77, 0.32);
-}
-
-.periodOptionDisabled,
-.periodOptionDisabled:hover {
-  background: transparent;
-  color: rgba(255, 248, 239, 0.24);
-  cursor: not-allowed;
-}
-
-.periodValue {
-  font-size: clamp(1.1rem, 2vw, 1.45rem);
-  font-weight: 700;
-  line-height: 1;
-}
-
-.periodUnit {
-  font-size: 0.74rem;
-  line-height: 1.1;
 }
 
 .periodHint {
@@ -561,24 +565,20 @@
     font-size: 0.68rem;
   }
 
-  .periodGroup {
+  .categoryGroup {
     gap: 0.25rem;
     padding: 0.25rem;
     border-radius: 1rem;
   }
 
-  .periodOption {
-    min-height: 2.75rem;
-    padding: 0.3rem 0.15rem;
+  .categoryOption {
+    padding: 0.42rem 0.7rem;
     border-radius: 0.75rem;
+    font-size: 0.8rem;
   }
 
-  .periodValue {
-    font-size: 1.05rem;
-  }
-
-  .periodUnit {
-    font-size: 0.64rem;
+  .fieldValue {
+    font-size: 0.97rem;
   }
 
   .resultCard,

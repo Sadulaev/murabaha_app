@@ -3,6 +3,7 @@ import multer from 'multer'
 import type { OrderFilesInput, OrderInput, UploadedFile } from '../types/order'
 import { saveOrder, getOrders } from '../services/storage'
 import { getPartnerById } from '../services/partners'
+import { getCategoryById } from '../services/categories'
 import { notifyNewOrder } from '../services/telegram'
 
 const router = Router()
@@ -57,6 +58,8 @@ function normalizeOrderInput(body: Record<string, unknown>): OrderInput | { erro
   const sellerPhone = typeof body.sellerPhone === 'string' ? body.sellerPhone.trim() || undefined : undefined
   const partnerId = typeof body.partnerId === 'string' ? body.partnerId.trim() || undefined : undefined
   const partnerName = typeof body.partnerName === 'string' ? body.partnerName.trim() || undefined : undefined
+  const categoryId = typeof body.categoryId === 'string' ? body.categoryId.trim() || undefined : undefined
+  const categoryName = typeof body.categoryName === 'string' ? body.categoryName.trim().slice(0, 120) || undefined : undefined
   const cost = parseNumber(body.cost)
   const firstPayment = parseNumber(body.firstPayment)
   const period = parseNumber(body.period)
@@ -96,6 +99,8 @@ function normalizeOrderInput(body: Record<string, unknown>): OrderInput | { erro
     sellerPhone,
     partnerId,
     partnerName,
+    categoryId,
+    categoryName,
   }
 }
 
@@ -168,6 +173,15 @@ router.post('/', uploadFields, async (req: Request, res: Response): Promise<void
       if (partner) {
         normalized.partnerId = partner.id
         normalized.partnerName = partner.name
+      }
+    }
+
+    if (normalized.categoryId) {
+      const category = await getCategoryById(normalized.categoryId)
+      if (category) {
+        normalized.categoryName = category.name
+      } else {
+        normalized.categoryId = undefined
       }
     }
 

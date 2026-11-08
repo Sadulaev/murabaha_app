@@ -49,6 +49,8 @@ function mapRowToOrder(row: Record<string, unknown>): Order {
     sellerPhone: row.seller_phone ? String(row.seller_phone) : undefined,
     partnerId: row.partner_id ? String(row.partner_id) : undefined,
     partnerName: row.partner_name ? String(row.partner_name) : undefined,
+    categoryId: row.category_id ? String(row.category_id) : undefined,
+    categoryName: row.category_name ? String(row.category_name) : undefined,
     buyerPassportMainPath: String(row.buyer_passport_main_path),
     buyerPassportResidencePath: String(row.buyer_passport_residence_path),
     buyerSelfiePath: String(row.buyer_selfie_path),
@@ -87,6 +89,8 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
     sellerPhone: input.sellerPhone,
     partnerId: input.partnerId,
     partnerName: input.partnerName,
+    categoryId: input.categoryId,
+    categoryName: input.categoryName,
 
     buyerPassportMainPath: savePhoto(files.buyerPassportMain, orderDir, 'buyer_passport_main'),
     buyerPassportResidencePath: savePhoto(files.buyerPassportResidence, orderDir, 'buyer_passport_residence'),
@@ -128,6 +132,8 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
           seller_phone,
           partner_id,
           partner_name,
+          category_id,
+          category_name,
           buyer_passport_main_path,
           buyer_passport_residence_path,
           buyer_selfie_path,
@@ -137,7 +143,7 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
           guarantor2_passport_residence_path,
           product_photo_path
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28
         )
       `,
       [
@@ -159,6 +165,8 @@ export async function saveOrder(input: OrderInput, files: OrderFilesInput): Prom
         order.sellerPhone ?? null,
         order.partnerId ?? null,
         order.partnerName ?? null,
+        order.categoryId ?? null,
+        order.categoryName ?? null,
         order.buyerPassportMainPath,
         order.buyerPassportResidencePath,
         order.buyerSelfiePath,

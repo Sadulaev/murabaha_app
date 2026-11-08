@@ -18,7 +18,7 @@ const SECTION_IDS = ["section-conditions", "section-calculator", "section-contac
 export function LandingExperience() {
   const { activeIndex, navigateTo, handleWheel, handleTouchEnd, handleTouchMove, handleTouchStart } =
     useSectionNavigator(SECTION_COUNT);
-  const partner = usePartnerReferral();
+  const { partner, ready: partnerReady } = usePartnerReferral();
 
   const isMobile = useMediaQuery("(max-width: 740px)");
 
@@ -53,7 +53,12 @@ export function LandingExperience() {
         </section>
 
         <section id={SECTION_IDS[1]} className={styles.section} aria-label="Калькулятор">
-          <CalculatorSection active={isMobile || activeIndex === 1} onNext={() => handleNavigate(2)} />
+          <CalculatorSection
+            active={isMobile || activeIndex === 1}
+            onNext={() => handleNavigate(2)}
+            partnerId={partner?.id ?? null}
+            partnerReady={partnerReady}
+          />
         </section>
 
         <section id={SECTION_IDS[2]} className={styles.section} aria-label="Контакты">

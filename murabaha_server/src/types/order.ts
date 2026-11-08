@@ -24,6 +24,8 @@ export interface OrderInput {
   sellerPhone?: string
   partnerId?: string
   partnerName?: string
+  categoryId?: string
+  categoryName?: string
 }
 
 export interface OrderFilesInput {
@@ -62,6 +64,9 @@ export interface Order {
 
   partnerId?: string
   partnerName?: string
+
+  categoryId?: string
+  categoryName?: string
 
   buyerPassportMainPath: string
   buyerPassportResidencePath: string

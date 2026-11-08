@@ -327,6 +327,13 @@ export function ApplicationFlow({ calculation, onContacts, onStepChange, expande
       formData.append("guarantor2PassportResidence", uploads.guarantor2PassportResidence!.file);
     }
 
+    if (calculation.categoryId) {
+      formData.append("categoryId", calculation.categoryId);
+    }
+    if (calculation.categoryName) {
+      formData.append("categoryName", calculation.categoryName);
+    }
+
     const partner = loadStoredPartner();
     if (partner) {
       formData.append("partnerId", partner.id);

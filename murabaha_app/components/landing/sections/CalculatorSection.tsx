@@ -1,26 +1,29 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { ApplicationFlow } from "@/components/application/ApplicationFlow";
 import { AnimatedText } from "../AnimatedText";
 import {
+  FALLBACK_CATEGORY_ID,
   MAX_COST,
   MIN_COST,
-  PERIOD_OPTIONS,
   calculateInstallment,
   costToSlider,
-  getMaxPeriod,
+  getMaxFirstPayment,
+  getMinFirstPayment,
   roundToNearestHundred,
   sliderToCost,
-  snapPeriod,
+  snapToTerm,
 } from "@/lib/calculator";
 import { getGuarantorsCount } from "@/lib/application-flow";
+import { useCalculatorConfig } from "@/hooks/useCalculatorConfig";
 import styles from "./CalculatorSection.module.css";
 
 type CalculatorSectionProps = {
   active: boolean;
   onNext: () => void;
+  partnerId: string | null;
+  partnerReady: boolean;
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -44,66 +47,64 @@ function formatAmount(value: number) {
   return value.toLocaleString("ru-RU");
 }
 
-export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
-  const searchParams = useSearchParams();
-  const encryptedRate = searchParams.get("k") ?? "";
+function formatPercent(value: number) {
+  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })}%`;
+}
 
+export function CalculatorSection({ active, onNext, partnerId, partnerReady }: CalculatorSectionProps) {
+  const { categories } = useCalculatorConfig(partnerId, partnerReady);
+
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [cost, setCost] = useState(120000);
-  const [firstPayment, setFirstPayment] = useState(30000);
-  const [period, setPeriod] = useState(6);
+  // What the user asked for; the effective value is clamped to the selected term's limits.
+  const [desiredFirstPayment, setDesiredFirstPayment] = useState(30000);
+  const [desiredPeriod, setDesiredPeriod] = useState(6);
   const [flowStep, setFlowStep] = useState(1);
 
-  const maxPeriod = getMaxPeriod(cost, firstPayment);
+  const category = categories.find((item) => item.id === categoryId) ?? categories[0];
+  const terms = category.terms;
+  const term = snapToTerm(terms, desiredPeriod);
+  const termIndex = terms.indexOf(term);
+  const period = term.months;
+
+  const minFirstPayment = getMinFirstPayment(cost, term.minDownPaymentPercent);
+  const maxFirstPayment = getMaxFirstPayment(cost, minFirstPayment);
+  const firstPayment = clamp(desiredFirstPayment, minFirstPayment, maxFirstPayment);
 
   const result = useMemo(
-    () => calculateInstallment({ cost, firstPayment, period, encryptedRate }),
-    [cost, encryptedRate, firstPayment, period],
+    () =>
+      calculateInstallment({
+        cost,
+        firstPayment,
+        period,
+        markupPercent: term.markupPercent,
+        includeFirstPaymentInMarkup: category.includeFirstPaymentInMarkup,
+      }),
+    [category.includeFirstPaymentInMarkup, cost, firstPayment, period, term.markupPercent],
   );
 
   const guarantorsCount = getGuarantorsCount(cost);
   const expandedFlow = flowStep > 1;
+  const isRealCategory = category.id !== FALLBACK_CATEGORY_ID;
 
   const handleCostChange = (nextCost: number) => {
-    if (!Number.isFinite(nextCost)) {
-      return;
-    }
-
-    const sanitizedCost = clamp(Math.round(nextCost), 0, MAX_COST);
-    setCost(sanitizedCost);
-
-    const newFirstPayment =
-      firstPayment > sanitizedCost * 0.8
-        ? roundToNearestHundred(sanitizedCost * 0.8)
-        : firstPayment;
-    if (newFirstPayment !== firstPayment) setFirstPayment(newFirstPayment);
-
-    const newMax = getMaxPeriod(sanitizedCost, newFirstPayment);
-    if (period > newMax) setPeriod(snapPeriod(period, newMax));
+    if (!Number.isFinite(nextCost)) return;
+    setCost(clamp(Math.round(nextCost), 0, MAX_COST));
   };
 
   const handleFirstPaymentChange = (nextPayment: number) => {
-    if (!Number.isFinite(nextPayment) || cost <= 0) {
-      return;
-    }
-
-    const cappedPayment = clamp(Math.round(nextPayment), 0, roundToNearestHundred(cost * 0.8));
-    setFirstPayment(cappedPayment);
-
-    const newMax = getMaxPeriod(cost, cappedPayment);
-    if (period > newMax) setPeriod(snapPeriod(period, newMax));
+    if (!Number.isFinite(nextPayment) || cost <= 0) return;
+    setDesiredFirstPayment(clamp(Math.round(nextPayment), 0, maxFirstPayment));
   };
 
-  const handlePeriodChange = (nextPeriod: number) => {
-    if (nextPeriod > maxPeriod || nextPeriod === period) {
-      return;
-    }
-
-    setPeriod(nextPeriod);
-
-    if (firstPayment < cost * 0.25) {
-      setFirstPayment(roundToNearestHundred(cost * 0.25));
-    }
+  const handleTermIndexChange = (index: number) => {
+    const next = terms[clamp(index, 0, terms.length - 1)];
+    if (next) setDesiredPeriod(next.months);
   };
+
+  const firstPaymentStep = Math.max(roundToNearestHundred(cost * 0.01), 100);
+  const shortestTerm = terms[0];
+  const longestTerm = terms[terms.length - 1];
 
   return (
     <>
@@ -119,6 +120,35 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
             </AnimatedText>
 
             <AnimatedText as="div" active={active} delay={220} className={styles.formPanel}>
+              {categories.length > 1 && (
+                <div className={styles.field} role="radiogroup" aria-labelledby="category-label">
+                  <span id="category-label" className={styles.fieldLabel}>
+                    Категория товара
+                  </span>
+                  <div className={styles.categoryGroup}>
+                    {categories.map((item) => {
+                      const selected = item.id === category.id;
+                      return (
+                        <label
+                          key={item.id}
+                          className={selected ? `${styles.categoryOption} ${styles.categoryOptionActive}` : styles.categoryOption}
+                        >
+                          <input
+                            type="radio"
+                            name="category"
+                            className="srOnly"
+                            value={item.id}
+                            checked={selected}
+                            onChange={() => setCategoryId(item.id)}
+                          />
+                          {item.name}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <label className={styles.field}>
                 <span className={styles.fieldLabel}>Стоимость товара</span>
                 <div className={styles.inputRow}>
@@ -160,60 +190,51 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
                 <input
                   className={styles.range}
                   type="range"
-                  min={0}
-                  max={Math.max(roundToNearestHundred(cost * 0.8), 0)}
-                  step={Math.max(roundToNearestHundred(cost * 0.05), 100)}
-                  value={Math.min(firstPayment, roundToNearestHundred(cost * 0.8))}
+                  min={minFirstPayment}
+                  max={maxFirstPayment}
+                  step={firstPaymentStep}
+                  value={firstPayment}
+                  disabled={maxFirstPayment <= minFirstPayment}
                   onChange={(event) => handleFirstPaymentChange(Number(event.target.value))}
                 />
                 <div className={styles.fieldMeta}>
-                  <span>0</span>
-                  <span>{formatAmount(roundToNearestHundred(cost * 0.8))}</span>
+                  <span>{minFirstPayment > 0 ? `от ${formatAmount(minFirstPayment)}` : "0"}</span>
+                  <span>{formatAmount(maxFirstPayment)}</span>
                 </div>
               </label>
 
-              <div className={styles.field} role="radiogroup" aria-labelledby="period-label">
-                <span id="period-label" className={styles.fieldLabel}>
-                  Срок рассрочки
+              <label className={styles.field}>
+                <span className={styles.fieldHeader}>
+                  <span className={styles.fieldLabel}>Срок рассрочки</span>
+                  <span className={styles.fieldValue}>
+                    {period} {formatMonths(period)}
+                  </span>
                 </span>
-                <div className={styles.periodGroup}>
-                  {PERIOD_OPTIONS.map((option) => {
-                    const disabled = option > maxPeriod;
-                    const selected = option === period;
-                    return (
-                      <label
-                        key={option}
-                        className={[
-                          styles.periodOption,
-                          selected ? styles.periodOptionActive : "",
-                          disabled ? styles.periodOptionDisabled : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                      >
-                        <input
-                          type="radio"
-                          name="period"
-                          className="srOnly"
-                          value={option}
-                          checked={selected}
-                          disabled={disabled}
-                          onChange={() => handlePeriodChange(option)}
-                        />
-                        <span className={styles.periodValue}>{option}</span>
-                        <span className={styles.periodUnit}>{formatMonths(option)}</span>
-                      </label>
-                    );
-                  })}
+                <input
+                  className={styles.range}
+                  type="range"
+                  min={0}
+                  max={Math.max(terms.length - 1, 0)}
+                  step={1}
+                  value={termIndex}
+                  disabled={terms.length < 2}
+                  aria-valuetext={`${period} ${formatMonths(period)}`}
+                  onChange={(event) => handleTermIndexChange(Number(event.target.value))}
+                />
+                <div className={styles.fieldMeta}>
+                  <span>
+                    {shortestTerm.months} {formatMonths(shortestTerm.months)}
+                  </span>
+                  <span>
+                    {longestTerm.months} {formatMonths(longestTerm.months)}
+                  </span>
                 </div>
-                {maxPeriod < PERIOD_OPTIONS[PERIOD_OPTIONS.length - 1] && (
+                {term.minDownPaymentPercent > 0 && (
                   <span className={styles.periodHint}>
-                    {cost < 50000
-                      ? "При стоимости до 50 000 руб доступно до 6 месяцев."
-                      : "Без первоначального взноса доступно до 6 месяцев."}
+                    На {period} {formatMonths(period)} первый взнос от {formatPercent(term.minDownPaymentPercent)} стоимости.
                   </span>
                 )}
-              </div>
+              </label>
             </AnimatedText>
           </div>
 
@@ -233,6 +254,8 @@ export function CalculatorSection({ active, onNext }: CalculatorSectionProps) {
                   monthlyAdditionalPayment: result.monthlyAdditionalPayment,
                   summaryPayment: result.summaryPayment,
                   guarantorsCount,
+                  categoryId: isRealCategory ? category.id : undefined,
+                  categoryName: isRealCategory ? category.name : undefined,
                 }}
                 onContacts={onNext}
                 onStepChange={setFlowStep}

@@ -92,6 +92,7 @@ export async function notifyNewOrder(order: Order): Promise<void> {
     ...(order.storeName ? [`🏪 <b>Магазин:</b> ${order.storeName}`] : []),
     ...(order.sellerPhone ? [`📞 <b>Номер продавца:</b> ${order.sellerPhone}`] : []),
     ...(order.partnerName ? [`🤝 <b>Партнёр:</b> ${order.partnerName}`] : []),
+    ...(order.categoryName ? [`🏷 <b>Категория:</b> ${order.categoryName}`] : []),
     '',,
     `👥 <b>Поручитель 1:</b> ${order.guarantor1Phone || '—'}`,
     ...(order.guarantor2Phone ? [`👥 <b>Поручитель 2:</b> ${order.guarantor2Phone}`] : []),

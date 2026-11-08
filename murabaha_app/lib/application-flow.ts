@@ -6,6 +6,8 @@ export type CalculationSummary = {
   monthlyAdditionalPayment: number;
   summaryPayment: number;
   guarantorsCount: number;
+  categoryId?: string;
+  categoryName?: string;
 };
 
 export type PersonalDetails = {

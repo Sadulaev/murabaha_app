@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/api";
 import { buildPartnerLink } from "@/lib/partner";
+import { CategoriesPanel } from "@/components/admin/CategoriesPanel";
 const TOKEN_KEY = "murabaha_admin_token";
 
 type OrderStatus = "pending" | "in_progress" | "rejected";
-type AdminTab = "orders" | "partners";
+type AdminTab = "orders" | "partners" | "categories";
 
 type Order = {
   id: string;
@@ -24,6 +25,7 @@ type Order = {
   guarantorsCount: number;
   partnerId?: string;
   partnerName?: string;
+  categoryName?: string;
   buyerPassportMainPath?: string;
   buyerPassportResidencePath?: string;
   buyerSelfiePath?: string;
@@ -257,6 +259,7 @@ function OrderCard({ order, token, onUpdated }: { order: Order; token: string; o
             <MetaRow label="Итоговая сумма" value={formatMoney(order.summaryPayment)} />
             <MetaRow label="Первый платёж" value={new Date(order.firstPaymentDate).toLocaleDateString("ru-RU")} />
             {order.partnerName && <MetaRow label="Партнёр" value={order.partnerName} />}
+            {order.categoryName && <MetaRow label="Категория" value={order.categoryName} />}
           </div>
 
           <div>
@@ -581,6 +584,7 @@ export default function AdminPage() {
             {([
               { id: "orders" as const, label: "Заявки" },
               { id: "partners" as const, label: "Партнёры" },
+              { id: "categories" as const, label: "Категории" },
             ]).map((item) => (
               <button
                 key={item.id}
@@ -652,7 +656,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      <main style={{ maxWidth: 860, margin: "0 auto", padding: "1rem 1rem 2rem" }}>
+      <main style={{ maxWidth: tab === "categories" ? 1120 : 860, margin: "0 auto", padding: "1rem 1rem 2rem" }}>
         {tab === "orders" && (
           <>
             {loading && <p style={{ textAlign: "center", color: "rgba(11,20,37,0.5)", padding: "3rem 0" }}>Загрузка заявок...</p>}
@@ -670,6 +674,10 @@ export default function AdminPage() {
 
         {tab === "partners" && (
           <PartnersPanel token={token} onUnauthorized={handleUnauthorized} />
+        )}
+
+        {tab === "categories" && (
+          <CategoriesPanel token={token} onUnauthorized={handleUnauthorized} />
         )}
       </main>
     </div>
