@@ -11,6 +11,7 @@ type AdminTab = "partners" | "categories";
 type Partner = {
   id: string;
   name: string;
+  slug: string;
   createdAt: string;
 };
 
@@ -125,12 +126,12 @@ function PartnersPanel({ token, onUnauthorized }: { token: string; onUnauthorize
     }
   };
 
-  const handleCopy = async (partnerId: string) => {
-    const link = buildPartnerLink(partnerId);
+  const handleCopy = async (partner: Partner) => {
+    const link = buildPartnerLink(partner.slug);
     try {
       await navigator.clipboard.writeText(link);
-      setCopiedId(partnerId);
-      setTimeout(() => setCopiedId((current) => (current === partnerId ? null : current)), 2000);
+      setCopiedId(partner.id);
+      setTimeout(() => setCopiedId((current) => (current === partner.id ? null : current)), 2000);
     } catch {
       setError("Не удалось скопировать ссылку.");
     }
@@ -187,7 +188,7 @@ function PartnersPanel({ token, onUnauthorized }: { token: string; onUnauthorize
 
       <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
         {partners.map((partner) => {
-          const link = buildPartnerLink(partner.id);
+          const link = buildPartnerLink(partner.slug);
           return (
             <article key={partner.id} style={{ border: "1px solid rgba(11,20,37,0.1)", borderRadius: "1rem", background: "#fff", padding: "0.95rem 1.1rem", display: "flex", flexDirection: "column", gap: "0.65rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", alignItems: "flex-start" }}>
@@ -198,7 +199,7 @@ function PartnersPanel({ token, onUnauthorized }: { token: string; onUnauthorize
                   </span>
                 </div>
                 <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-                  <button type="button" onClick={() => void handleCopy(partner.id)} style={ghostBtnStyle}>
+                  <button type="button" onClick={() => void handleCopy(partner)} style={ghostBtnStyle}>
                     {copiedId === partner.id ? "Скопировано" : "Копировать ссылку"}
                   </button>
                   <button

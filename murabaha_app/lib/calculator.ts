@@ -14,7 +14,18 @@ export type CalculatorCategory = {
   id: string;
   name: string;
   includeFirstPaymentInMarkup: boolean;
+  /** Inclusive product-cost bounds, in rubles. */
+  amountMin: number;
+  amountMax: number;
   terms: CalculatorTerm[];
+};
+
+export type CategorySpotlight = {
+  id: string;
+  name: string;
+  amountLabel: string;
+  termLabel: string;
+  downPaymentLabel: string;
 };
 
 export type CalculatorConfig = {
@@ -50,8 +61,44 @@ export const FALLBACK_CATEGORY: CalculatorCategory = {
   id: FALLBACK_CATEGORY_ID,
   name: "Общая",
   includeFirstPaymentInMarkup: true,
+  amountMin: MIN_COST,
+  amountMax: MAX_COST,
   terms: buildDefaultTerms(),
 };
+
+function formatSpotlightNumber(value: number): string {
+  return value.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
+}
+
+function formatBound(min: number, max: number, format: (value: number) => string, suffix = ""): string {
+  if (min === max) return `${format(min)}${suffix}`;
+  return `${format(min)} – ${format(max)}${suffix}`;
+}
+
+/** Amount, term and minimum down-payment window for the first landing block. */
+export function getCategorySpotlight(category: CalculatorCategory): CategorySpotlight {
+  const amountMin = Number.isFinite(category.amountMin) ? category.amountMin : MIN_COST;
+  const amountMax = Number.isFinite(category.amountMax) ? category.amountMax : MAX_COST;
+  let termMin = category.terms[0]?.months ?? 0;
+  let termMax = termMin;
+  let downMin = category.terms[0]?.minDownPaymentPercent ?? 0;
+  let downMax = downMin;
+
+  for (const term of category.terms) {
+    if (term.months < termMin) termMin = term.months;
+    if (term.months > termMax) termMax = term.months;
+    if (term.minDownPaymentPercent < downMin) downMin = term.minDownPaymentPercent;
+    if (term.minDownPaymentPercent > downMax) downMax = term.minDownPaymentPercent;
+  }
+
+  return {
+    id: category.id,
+    name: category.name,
+    amountLabel: formatBound(amountMin, amountMax, (value) => value.toLocaleString("ru-RU")),
+    termLabel: formatBound(termMin, termMax, (value) => String(value), " мес."),
+    downPaymentLabel: formatBound(downMin, downMax, formatSpotlightNumber, "%"),
+  };
+}
 
 export type CalculationResult = {
   monthlyPayment: number;
@@ -99,22 +146,52 @@ export function snapToTerm(terms: CalculatorTerm[], months: number): CalculatorT
   return best;
 }
 
-export function sliderToCost(position: number): number {
-  if (position <= 50) {
-    const raw = MIN_COST + (position / 50) * 140000;
-    return Math.round(raw / 500) * 500;
-  }
-
-  const raw = 150000 + ((position - 50) / 50) * 150000;
-  return Math.round(raw / 5000) * 5000;
+export function costScaleMidpoint(minCost: number, maxCost: number): number {
+  if (minCost === MIN_COST && maxCost === MAX_COST) return 150_000;
+  return Math.round((minCost + maxCost) / 2);
 }
 
-export function costToSlider(value: number): number {
-  if (value <= 150000) {
-    return ((value - MIN_COST) / 140000) * 50;
+export function sliderToCost(position: number, minCost = MIN_COST, maxCost = MAX_COST): number {
+  if (minCost === MIN_COST && maxCost === MAX_COST) {
+    if (position <= 50) {
+      const raw = MIN_COST + (position / 50) * 140000;
+      return Math.round(raw / 500) * 500;
+    }
+
+    const raw = 150000 + ((position - 50) / 50) * 150000;
+    return Math.round(raw / 5000) * 5000;
   }
 
-  return 50 + ((value - 150000) / 150000) * 50;
+  const min = Math.min(minCost, maxCost);
+  const max = Math.max(minCost, maxCost);
+  if (position <= 0) return min;
+  if (position >= 100) return max;
+
+  const mid = min + (max - min) / 2;
+  const raw = position <= 50 ? min + (position / 50) * (mid - min) : mid + ((position - 50) / 50) * (max - mid);
+  const step = max - min >= 200_000 ? 5_000 : max - min >= 20_000 ? 500 : 100;
+  return Math.min(max, Math.max(min, Math.round(raw / step) * step));
+}
+
+export function costToSlider(value: number, minCost = MIN_COST, maxCost = MAX_COST): number {
+  if (minCost === MIN_COST && maxCost === MAX_COST) {
+    if (value <= 150000) {
+      return ((value - MIN_COST) / 140000) * 50;
+    }
+
+    return 50 + ((value - 150000) / 150000) * 50;
+  }
+
+  const min = Math.min(minCost, maxCost);
+  const max = Math.max(minCost, maxCost);
+  const clamped = Math.min(max, Math.max(min, value));
+  const mid = min + (max - min) / 2;
+  if (clamped <= mid) {
+    const span = mid - min;
+    return span <= 0 ? 0 : ((clamped - min) / span) * 50;
+  }
+  const span = max - mid;
+  return span <= 0 ? 100 : 50 + ((clamped - mid) / span) * 50;
 }
 
 /** Same formula as murabaha_server/src/services/calculator.ts. */

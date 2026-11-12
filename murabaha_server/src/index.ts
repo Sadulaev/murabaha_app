@@ -8,6 +8,7 @@ import partnersRouter from './routes/partners'
 import categoriesRouter from './routes/categories'
 import { initDb } from './services/db'
 import { seedDefaultGlobalCategoryIfNeeded } from './services/categories'
+import { backfillPartnerSlugs } from './services/partners'
 import { startCleanupCron } from './services/cleanup'
 
 const app = express()
@@ -43,6 +44,7 @@ app.use('/api/partners', partnersRouter)
 app.use('/api/categories', categoriesRouter)
 
 initDb()
+  .then(() => backfillPartnerSlugs())
   .then(() => seedDefaultGlobalCategoryIfNeeded())
   .then(() => {
     app.listen(PORT, () => {

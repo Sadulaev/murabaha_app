@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/api";
-import { FALLBACK_CATEGORY, type CalculatorCategory, type CalculatorConfig } from "@/lib/calculator";
+import { FALLBACK_CATEGORY, MAX_COST, MIN_COST, type CalculatorCategory, type CalculatorConfig } from "@/lib/calculator";
 
 export type CalculatorConfigState = {
   categories: CalculatorCategory[];
@@ -15,9 +15,11 @@ function usableCategories(config: CalculatorConfig): CalculatorCategory[] {
   return config.categories
     .map((category) => ({
       ...category,
+      amountMin: Number.isFinite(category.amountMin) ? category.amountMin : MIN_COST,
+      amountMax: Number.isFinite(category.amountMax) ? category.amountMax : MAX_COST,
       terms: [...category.terms].sort((a, b) => a.months - b.months),
     }))
-    .filter((category) => category.terms.length > 0);
+    .filter((category) => category.terms.length > 0 && category.amountMax > category.amountMin);
 }
 
 /** Loads calculator categories for the partner (or the global catalog). Waits until `enabled`. */

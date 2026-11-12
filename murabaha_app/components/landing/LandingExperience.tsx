@@ -7,6 +7,7 @@ import { PartnerBadge } from "./PartnerBadge";
 import { CalculatorSection } from "./sections/CalculatorSection";
 import { ConditionsSection } from "./sections/ConditionsSection";
 import { ContactsSection } from "./sections/ContactsSection";
+import { useCalculatorConfig } from "@/hooks/useCalculatorConfig";
 import { usePartnerReferral } from "@/hooks/usePartnerReferral";
 import { useSectionNavigator } from "@/hooks/useSectionNavigator";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -19,6 +20,7 @@ export function LandingExperience() {
   const { activeIndex, navigateTo, handleWheel, handleTouchEnd, handleTouchMove, handleTouchStart } =
     useSectionNavigator(SECTION_COUNT);
   const { partner, ready: partnerReady } = usePartnerReferral();
+  const { categories } = useCalculatorConfig(partner?.id ?? null, partnerReady);
 
   const isMobile = useMediaQuery("(max-width: 740px)");
 
@@ -49,15 +51,18 @@ export function LandingExperience() {
         <section id={SECTION_IDS[0]} className={styles.section} aria-label="Условия">
           <BrandMark onClick={() => handleNavigate(0)} />
           {partner && <PartnerBadge name={partner.name} />}
-          <ConditionsSection active={isMobile || activeIndex === 0} onNext={() => handleNavigate(1)} />
+          <ConditionsSection
+            active={isMobile || activeIndex === 0}
+            onNext={() => handleNavigate(1)}
+            categories={categories}
+          />
         </section>
 
         <section id={SECTION_IDS[1]} className={styles.section} aria-label="Калькулятор">
           <CalculatorSection
             active={isMobile || activeIndex === 1}
             onNext={() => handleNavigate(2)}
-            partnerId={partner?.id ?? null}
-            partnerReady={partnerReady}
+            categories={categories}
           />
         </section>
 

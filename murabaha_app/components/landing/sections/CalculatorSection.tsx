@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatedText } from "../AnimatedText";
 import {
-  MAX_COST,
-  MIN_COST,
   calculateInstallment,
+  costScaleMidpoint,
   costToSlider,
   getGuarantorsCount,
   getMaxFirstPayment,
@@ -13,15 +12,15 @@ import {
   roundToNearestHundred,
   sliderToCost,
   snapToTerm,
+  FALLBACK_CATEGORY,
+  type CalculatorCategory,
 } from "@/lib/calculator";
-import { useCalculatorConfig } from "@/hooks/useCalculatorConfig";
 import styles from "./CalculatorSection.module.css";
 
 type CalculatorSectionProps = {
   active: boolean;
   onNext: () => void;
-  partnerId: string | null;
-  partnerReady: boolean;
+  categories: CalculatorCategory[];
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -49,17 +48,17 @@ function formatPercent(value: number) {
   return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })}%`;
 }
 
-export function CalculatorSection({ active, onNext, partnerId, partnerReady }: CalculatorSectionProps) {
-  const { categories } = useCalculatorConfig(partnerId, partnerReady);
-
+export function CalculatorSection({ active, onNext, categories }: CalculatorSectionProps) {
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [cost, setCost] = useState(120000);
   // What the user asked for; the effective value is clamped to the selected term's limits.
   const [desiredFirstPayment, setDesiredFirstPayment] = useState(30000);
   const [desiredPeriod, setDesiredPeriod] = useState(6);
 
-  const category = categories.find((item) => item.id === categoryId) ?? categories[0];
-  const terms = category.terms;
+  const category = categories.find((item) => item.id === categoryId) ?? categories[0] ?? FALLBACK_CATEGORY;
+  const terms = category.terms.length > 0 ? category.terms : FALLBACK_CATEGORY.terms;
+  const amountMin = category.amountMin;
+  const amountMax = category.amountMax;
   const term = snapToTerm(terms, desiredPeriod);
   const termIndex = terms.indexOf(term);
   const period = term.months;
@@ -82,9 +81,13 @@ export function CalculatorSection({ active, onNext, partnerId, partnerReady }: C
 
   const guarantorsCount = getGuarantorsCount(cost);
 
+  useEffect(() => {
+    setCost((current) => clamp(current, amountMin, amountMax));
+  }, [amountMin, amountMax]);
+
   const handleCostChange = (nextCost: number) => {
     if (!Number.isFinite(nextCost)) return;
-    setCost(clamp(Math.round(nextCost), 0, MAX_COST));
+    setCost(clamp(Math.round(nextCost), 0, amountMax));
   };
 
   const handleFirstPaymentChange = (nextPayment: number) => {
@@ -152,6 +155,7 @@ export function CalculatorSection({ active, onNext, partnerId, partnerReady }: C
                     inputMode="numeric"
                     value={formatAmount(cost)}
                     onChange={(event) => handleCostChange(parseDigits(event.target.value))}
+                    onBlur={() => setCost((current) => clamp(current, amountMin, amountMax))}
                   />
                   <span>руб</span>
                 </div>
@@ -161,13 +165,13 @@ export function CalculatorSection({ active, onNext, partnerId, partnerReady }: C
                   min={0}
                   max={100}
                   step={0.1}
-                  value={costToSlider(Math.max(cost, MIN_COST))}
-                  onChange={(event) => handleCostChange(sliderToCost(Number(event.target.value)))}
+                  value={costToSlider(clamp(cost, amountMin, amountMax), amountMin, amountMax)}
+                  onChange={(event) => handleCostChange(sliderToCost(Number(event.target.value), amountMin, amountMax))}
                 />
                 <div className={styles.fieldMeta}>
-                  <span>10 000</span>
-                  <span>150 000</span>
-                  <span>300 000</span>
+                  <span>{formatAmount(amountMin)}</span>
+                  <span>{formatAmount(costScaleMidpoint(amountMin, amountMax))}</span>
+                  <span>{formatAmount(amountMax)}</span>
                 </div>
               </label>
 

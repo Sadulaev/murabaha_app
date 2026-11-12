@@ -1,3 +1,12 @@
+declare global {
+  interface Window {
+    /** Set by the bootstrap script when the visitor opened `/ur/{slug}`. */
+    __murabahaPathSlug?: string;
+    /** Restores `/ur/{slug}` after Next has hydrated the home page. */
+    __murabahaRestorePartnerUrl?: () => void;
+  }
+}
+
 export type StoredPartner = {
   id: string;
   name: string;
@@ -26,7 +35,27 @@ export function saveStoredPartner(partner: StoredPartner): void {
   }
 }
 
-export function buildPartnerLink(partnerId: string, origin?: string): string {
+export function readBootstrappedPartnerSlug(): string | null {
+  if (typeof window === "undefined") return null;
+  const bootstrapped = window.__murabahaPathSlug?.trim().toLowerCase();
+  if (bootstrapped) return bootstrapped;
+
+  const match = window.location.pathname.match(/^\/ur\/([^/]+)\/?$/);
+  if (!match) return null;
+  try {
+    const slug = decodeURIComponent(match[1]).trim().toLowerCase();
+    return slug || null;
+  } catch {
+    return match[1].trim().toLowerCase() || null;
+  }
+}
+
+export function restorePartnerUrl(): void {
+  window.__murabahaRestorePartnerUrl?.();
+}
+
+/** Referral URL: /ur/{latin slug of the full partner name}. */
+export function buildPartnerLink(slug: string, origin?: string): string {
   const base = origin ?? (typeof window !== "undefined" ? window.location.origin : "");
-  return `${base}/?p=${encodeURIComponent(partnerId)}`;
+  return `${base}/ur/${encodeURIComponent(slug.trim().toLowerCase())}`;
 }

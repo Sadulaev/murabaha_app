@@ -5,19 +5,22 @@ import { useSearchParams } from "next/navigation";
 import { apiUrl } from "@/lib/api";
 import {
   loadStoredPartner,
+  readBootstrappedPartnerSlug,
+  restorePartnerUrl,
   saveStoredPartner,
   type StoredPartner,
 } from "@/lib/partner";
 
 export type PartnerReferral = {
   partner: StoredPartner | null;
-  /** False until localStorage is read and any `?p=` lookup has settled. */
+  /** False until localStorage is read and any referral lookup has settled. */
   ready: boolean;
 };
 
 /**
- * Captures partner from ?p= URL param into localStorage (overwrite only).
- * Without ?p=, keeps whatever is already stored — never clears.
+ * Captures a partner into localStorage (overwrite only, never clears).
+ * `/ur/{slug}` wins over the legacy `?p=` id.
+ * The slug is stashed by the bootstrap script before Next hydrates.
  */
 export function usePartnerReferral(): PartnerReferral {
   const searchParams = useSearchParams();
@@ -25,9 +28,12 @@ export function usePartnerReferral(): PartnerReferral {
   const [state, setState] = useState<PartnerReferral>({ partner: null, ready: false });
 
   useEffect(() => {
+    restorePartnerUrl();
+    const slug = readBootstrappedPartnerSlug();
     const stored = loadStoredPartner();
+    const legacyId = slug ? null : partnerParam;
 
-    if (!partnerParam) {
+    if (!slug && !legacyId) {
       setState({ partner: stored, ready: true });
       return;
     }
@@ -38,7 +44,10 @@ export function usePartnerReferral(): PartnerReferral {
     const resolve = async () => {
       let next = stored;
       try {
-        const res = await fetch(apiUrl(`/api/partners/${encodeURIComponent(partnerParam)}`));
+        const path = slug
+          ? `/api/partners/by-slug/${encodeURIComponent(slug)}`
+          : `/api/partners/${encodeURIComponent(legacyId ?? "")}`;
+        const res = await fetch(apiUrl(path));
         if (res.ok) {
           const data = (await res.json()) as { id?: string; name?: string };
           if (data.id && data.name) {

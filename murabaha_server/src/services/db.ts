@@ -94,6 +94,13 @@ export async function initDb(): Promise<void> {
     )
   `)
 
+  await db.query(`
+    ALTER TABLE partners ADD COLUMN IF NOT EXISTS slug TEXT
+  `)
+  await db.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_partners_slug ON partners (slug)
+  `)
+
   // Product categories: global (partner_id IS NULL) or per-partner catalogs
   await db.query(`
     CREATE TABLE IF NOT EXISTS product_categories (
@@ -103,9 +110,18 @@ export async function initDb(): Promise<void> {
       sort_order INTEGER NOT NULL DEFAULT 0,
       is_active BOOLEAN NOT NULL DEFAULT TRUE,
       include_first_payment_in_markup BOOLEAN NOT NULL DEFAULT TRUE,
+      amount_min INTEGER NOT NULL DEFAULT 10000,
+      amount_max INTEGER NOT NULL DEFAULT 300000,
       created_at TIMESTAMPTZ NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL
     )
+  `)
+
+  await db.query(`
+    ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS amount_min INTEGER NOT NULL DEFAULT 10000
+  `)
+  await db.query(`
+    ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS amount_max INTEGER NOT NULL DEFAULT 300000
   `)
 
   await db.query(`

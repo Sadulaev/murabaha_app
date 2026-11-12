@@ -42,6 +42,13 @@ function messageFromError(err: unknown, fallback: string): string {
   return fallback
 }
 
+function readAmountLimit(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  if (typeof value === 'number') return value
+  if (typeof value === 'string' && value.trim()) return Number(value)
+  return Number.NaN
+}
+
 function parseTermsBody(raw: unknown): CategoryTermSetting[] | null {
   if (!Array.isArray(raw)) return null
   return raw.map((item) => {
@@ -83,6 +90,13 @@ router.post('/calculate', async (req: Request, res: Response): Promise<void> => 
     const category = await getCategoryWithTerms(categoryId)
     if (!category || !category.isActive) {
       res.status(404).json({ error: 'Категория не найдена.' })
+      return
+    }
+
+    if (!Number.isFinite(cost) || cost < category.amountMin || cost > category.amountMax) {
+      res.status(400).json({
+        error: `Стоимость должна быть от ${category.amountMin} до ${category.amountMax} ₽.`,
+      })
       return
     }
 
@@ -225,6 +239,8 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         typeof body.includeFirstPaymentInMarkup === 'boolean'
           ? body.includeFirstPaymentInMarkup
           : undefined,
+      amountMin: readAmountLimit(body.amountMin),
+      amountMax: readAmountLimit(body.amountMax),
     })
     res.status(201).json(category)
   } catch (err) {
@@ -278,6 +294,8 @@ router.patch('/:id', async (req: Request, res: Response): Promise<void> => {
         typeof body.includeFirstPaymentInMarkup === 'boolean'
           ? body.includeFirstPaymentInMarkup
           : undefined,
+      amountMin: readAmountLimit(body.amountMin),
+      amountMax: readAmountLimit(body.amountMax),
     })
     if (!updated) {
       res.status(404).json({ error: 'Категория не найдена.' })

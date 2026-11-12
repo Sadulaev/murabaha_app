@@ -1,6 +1,11 @@
 /** Max installment term supported by admin table / calculator. */
 export const MAX_TERM_MONTHS = 24
 
+/** Default product-amount window shown on the landing and used by the calculator. */
+export const DEFAULT_AMOUNT_MIN = 10_000
+export const DEFAULT_AMOUNT_MAX = 300_000
+export const MAX_AMOUNT_LIMIT = 100_000_000
+
 export interface CategoryTermSetting {
   /** Installment length in months (1..MAX_TERM_MONTHS). */
   months: number
@@ -28,6 +33,10 @@ export interface ProductCategory {
    * When false, markup is calculated from `cost - firstPayment`.
    */
   includeFirstPaymentInMarkup: boolean
+  /** Inclusive lower bound of the product cost, in rubles. */
+  amountMin: number
+  /** Inclusive upper bound of the product cost, in rubles. */
+  amountMax: number
   createdAt: string
   updatedAt: string
 }
@@ -42,6 +51,8 @@ export interface ProductCategoryInput {
   sortOrder?: number
   isActive?: boolean
   includeFirstPaymentInMarkup?: boolean
+  amountMin?: number
+  amountMax?: number
 }
 
 export interface ProductCategoryUpdateInput {
@@ -49,6 +60,8 @@ export interface ProductCategoryUpdateInput {
   sortOrder?: number
   isActive?: boolean
   includeFirstPaymentInMarkup?: boolean
+  amountMin?: number
+  amountMax?: number
 }
 
 export interface CategorySettingsUpdateInput {
@@ -61,6 +74,8 @@ export interface PublicCategoryConfig {
   id: string
   name: string
   includeFirstPaymentInMarkup: boolean
+  amountMin: number
+  amountMax: number
   terms: Array<{
     months: number
     markupPercent: number

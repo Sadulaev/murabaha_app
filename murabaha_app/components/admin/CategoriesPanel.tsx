@@ -19,6 +19,8 @@ type Category = {
   sortOrder: number;
   isActive: boolean;
   includeFirstPaymentInMarkup: boolean;
+  amountMin: number;
+  amountMax: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -114,9 +116,43 @@ function formatMoney(value: number) {
   return `${value.toLocaleString("ru-RU")} ₽`;
 }
 
+function formatLimit(value: number | null | undefined) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric.toLocaleString("ru-RU") : "";
+}
+
+function parseLimit(raw: string): number | null {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return null;
+  const value = Number(digits);
+  return Number.isSafeInteger(value) ? value : null;
+}
+
 function stripTerms(category: CategoryWithTerms | Category): Category {
-  const { id, partnerId, name, sortOrder, isActive, includeFirstPaymentInMarkup, createdAt, updatedAt } = category;
-  return { id, partnerId, name, sortOrder, isActive, includeFirstPaymentInMarkup, createdAt, updatedAt };
+  const {
+    id,
+    partnerId,
+    name,
+    sortOrder,
+    isActive,
+    includeFirstPaymentInMarkup,
+    amountMin,
+    amountMax,
+    createdAt,
+    updatedAt,
+  } = category;
+  return {
+    id,
+    partnerId,
+    name,
+    sortOrder,
+    isActive,
+    includeFirstPaymentInMarkup,
+    amountMin,
+    amountMax,
+    createdAt,
+    updatedAt,
+  };
 }
 
 const STATUS_LABEL: Record<RowState["status"], string> = {
@@ -138,6 +174,8 @@ export function CategoriesPanel({ token, onUnauthorized }: { token: string; onUn
   const [draftInclude, setDraftInclude] = useState(true);
   const [baseline, setBaseline] = useState(() => snapshot(emptyRows(), true));
   const [nameDraft, setNameDraft] = useState("");
+  const [limitMin, setLimitMin] = useState("");
+  const [limitMax, setLimitMax] = useState("");
 
   const [newName, setNewName] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
@@ -147,6 +185,7 @@ export function CategoriesPanel({ token, onUnauthorized }: { token: string; onUn
   const [bulk, setBulk] = useState<BulkState>({ from: "3", to: String(MAX_TERM_MONTHS), markup: "", step: "", minDp: "" });
 
   const tableRef = useRef<HTMLTableElement>(null);
+  const limitsRef = useRef<HTMLDivElement>(null);
   const detailRequestRef = useRef(0);
 
   const dirty = detail !== null && snapshot(draftRows, draftInclude) !== baseline;
@@ -170,6 +209,8 @@ export function CategoriesPanel({ token, onUnauthorized }: { token: string; onUn
     setDraftInclude(next.includeFirstPaymentInMarkup);
     setBaseline(snapshot(rows, next.includeFirstPaymentInMarkup));
     setNameDraft(next.name);
+    setLimitMin(formatLimit(next.amountMin));
+    setLimitMax(formatLimit(next.amountMax));
   };
 
   const confirmDiscard = () => !dirty || confirm("Есть несохранённые изменения в таблице. Отменить их?");
@@ -262,18 +303,71 @@ export function CategoriesPanel({ token, onUnauthorized }: { token: string; onUn
     }
   };
 
-  const patchCategory = async (patch: Partial<Pick<Category, "name" | "isActive">>) => {
+  const patchCategory = async (
+    patch: Partial<Pick<Category, "name" | "isActive" | "amountMin" | "amountMax">>,
+  ) => {
     if (!detail) return;
     setError(null);
     try {
       const updated = await request<Category>(token, `/api/categories/${detail.id}`, { method: "PATCH", body: patch });
-      setCategories((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
-      setDetail((prev) => (prev && prev.id === updated.id ? { ...prev, name: updated.name, isActive: updated.isActive } : prev));
+      const limitsInPatch = patch.amountMin !== undefined || patch.amountMax !== undefined;
+      setCategories((prev) =>
+        prev.map((item) =>
+          item.id === updated.id
+            ? limitsInPatch
+              ? updated
+              : { ...updated, amountMin: item.amountMin, amountMax: item.amountMax }
+            : item,
+        ),
+      );
+      setDetail((prev) =>
+        prev && prev.id === updated.id
+          ? {
+              ...prev,
+              ...updated,
+              terms: prev.terms,
+              amountMin: limitsInPatch ? updated.amountMin : prev.amountMin,
+              amountMax: limitsInPatch ? updated.amountMax : prev.amountMax,
+            }
+          : prev,
+      );
       setNameDraft(updated.name);
+      if (patch.amountMin !== undefined || patch.amountMax !== undefined) {
+        setLimitMin(formatLimit(updated.amountMin));
+        setLimitMax(formatLimit(updated.amountMax));
+      }
     } catch (err) {
       setNameDraft(detail.name);
+      if (patch.amountMin !== undefined || patch.amountMax !== undefined) {
+        setLimitMin(formatLimit(detail.amountMin));
+        setLimitMax(formatLimit(detail.amountMax));
+      }
       handleError(err, "Не удалось обновить категорию.");
     }
+  };
+
+  const handleLimitsSave = () => {
+    if (!detail) return;
+    const amountMin = parseLimit(limitMin);
+    const amountMax = parseLimit(limitMax);
+    if (amountMin === null || amountMax === null || amountMin < 0 || amountMax <= amountMin || amountMax > 100_000_000) {
+      setLimitMin(formatLimit(detail.amountMin));
+      setLimitMax(formatLimit(detail.amountMax));
+      setError("Лимит суммы: «от» и «до» — целые числа, «от» меньше «до».");
+      return;
+    }
+    if (amountMin === detail.amountMin && amountMax === detail.amountMax) {
+      setLimitMin(formatLimit(amountMin));
+      setLimitMax(formatLimit(amountMax));
+      return;
+    }
+    void patchCategory({ amountMin, amountMax });
+  };
+
+  const handleLimitsBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const next = event.relatedTarget;
+    if (next instanceof Node && limitsRef.current?.contains(next)) return;
+    handleLimitsSave();
   };
 
   const handleRename = () => {
@@ -566,6 +660,46 @@ export function CategoriesPanel({ token, onUnauthorized }: { token: string; onUn
                     </small>
                   </span>
                 </label>
+
+                <div className={styles.bulk} ref={limitsRef}>
+                  <span>Сумма товара от</span>
+                  <input
+                    className={styles.bulkInput}
+                    style={{ width: "8rem" }}
+                    inputMode="numeric"
+                    aria-label="Минимальная сумма товара"
+                    value={limitMin}
+                    onChange={(event) => {
+                      const digits = event.target.value.replace(/\D/g, "");
+                      setLimitMin(digits ? Number(digits).toLocaleString("ru-RU") : "");
+                    }}
+                    onBlur={handleLimitsBlur}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") event.currentTarget.blur();
+                    }}
+                  />
+                  <span>до</span>
+                  <input
+                    className={styles.bulkInput}
+                    style={{ width: "8rem" }}
+                    inputMode="numeric"
+                    aria-label="Максимальная сумма товара"
+                    value={limitMax}
+                    onChange={(event) => {
+                      const digits = event.target.value.replace(/\D/g, "");
+                      setLimitMax(digits ? Number(digits).toLocaleString("ru-RU") : "");
+                    }}
+                    onBlur={handleLimitsBlur}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") event.currentTarget.blur();
+                    }}
+                  />
+                  <span>₽</span>
+                </div>
+                <p className={styles.hint}>
+                  Эти границы, срок из заполненных месяцев и минимальный первый взнос показываются в первом блоке
+                  лендинга. Калькулятор не даёт выбрать сумму вне границ.
+                </p>
 
                 {detail.isActive && enabledCount === 0 && (
                   <p className={styles.error}>Категория не появится в калькуляторе: нет ни одного заполненного срока.</p>

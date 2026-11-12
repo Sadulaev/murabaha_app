@@ -9,7 +9,7 @@ import type {
   PublicCalculatorConfig,
   PublicCategoryConfig,
 } from '../types/category'
-import { MAX_TERM_MONTHS } from '../types/category'
+import { DEFAULT_AMOUNT_MAX, DEFAULT_AMOUNT_MIN, MAX_AMOUNT_LIMIT, MAX_TERM_MONTHS } from '../types/category'
 import { getDb } from './db'
 import { getPartnerById } from './partners'
 
@@ -25,6 +25,8 @@ function mapRowToCategory(row: Record<string, unknown>): ProductCategory {
     sortOrder: Number(row.sort_order),
     isActive: Boolean(row.is_active),
     includeFirstPaymentInMarkup: Boolean(row.include_first_payment_in_markup),
+    amountMin: Number(row.amount_min ?? DEFAULT_AMOUNT_MIN),
+    amountMax: Number(row.amount_max ?? DEFAULT_AMOUNT_MAX),
     createdAt: new Date(String(row.created_at)).toISOString(),
     updatedAt: new Date(String(row.updated_at)).toISOString(),
   }
@@ -66,6 +68,27 @@ export function buildDefaultTermSettings(): CategoryTermSetting[] {
   }
 
   return terms
+}
+
+export function assertAmountLimits(amountMin: number, amountMax: number): void {
+  if (!Number.isInteger(amountMin) || !Number.isInteger(amountMax)) {
+    throw Object.assign(new Error('Лимиты суммы должны быть целыми числами.'), { statusCode: 400 })
+  }
+  if (amountMin < 0 || amountMax > MAX_AMOUNT_LIMIT || amountMax <= amountMin) {
+    throw Object.assign(new Error('Лимит «от» должен быть меньше лимита «до».'), { statusCode: 400 })
+  }
+}
+
+function resolveAmountLimits(
+  amountMin: number | undefined,
+  amountMax: number | undefined,
+  fallbackMin = DEFAULT_AMOUNT_MIN,
+  fallbackMax = DEFAULT_AMOUNT_MAX,
+): { amountMin: number; amountMax: number } {
+  const min = amountMin ?? fallbackMin
+  const max = amountMax ?? fallbackMax
+  assertAmountLimits(min, max)
+  return { amountMin: min, amountMax: max }
 }
 
 function emptyTermGrid(): CategoryTermSetting[] {
@@ -126,14 +149,16 @@ export async function seedDefaultGlobalCategoryIfNeeded(): Promise<void> {
     sortOrder: 0,
     isActive: true,
     includeFirstPaymentInMarkup: true,
+    amountMin: DEFAULT_AMOUNT_MIN,
+    amountMax: DEFAULT_AMOUNT_MAX,
     createdAt: now,
     updatedAt: now,
   }
 
   await db.query(
     `INSERT INTO product_categories
-      (id, partner_id, name, sort_order, is_active, include_first_payment_in_markup, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      (id, partner_id, name, sort_order, is_active, include_first_payment_in_markup, amount_min, amount_max, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [
       category.id,
       null,
@@ -141,6 +166,8 @@ export async function seedDefaultGlobalCategoryIfNeeded(): Promise<void> {
       category.sortOrder,
       category.isActive,
       category.includeFirstPaymentInMarkup,
+      category.amountMin,
+      category.amountMax,
       category.createdAt,
       category.updatedAt,
     ],
@@ -207,6 +234,8 @@ export async function createCategory(input: ProductCategoryInput): Promise<Produ
       ? Math.trunc(input.sortOrder)
       : 0
 
+  const amounts = resolveAmountLimits(input.amountMin, input.amountMax)
+
   const category: ProductCategory = {
     id: generateId(),
     partnerId,
@@ -214,14 +243,16 @@ export async function createCategory(input: ProductCategoryInput): Promise<Produ
     sortOrder,
     isActive: input.isActive !== false,
     includeFirstPaymentInMarkup: input.includeFirstPaymentInMarkup !== false,
+    amountMin: amounts.amountMin,
+    amountMax: amounts.amountMax,
     createdAt: now,
     updatedAt: now,
   }
 
   await db.query(
     `INSERT INTO product_categories
-      (id, partner_id, name, sort_order, is_active, include_first_payment_in_markup, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      (id, partner_id, name, sort_order, is_active, include_first_payment_in_markup, amount_min, amount_max, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [
       category.id,
       category.partnerId,
@@ -229,6 +260,8 @@ export async function createCategory(input: ProductCategoryInput): Promise<Produ
       category.sortOrder,
       category.isActive,
       category.includeFirstPaymentInMarkup,
+      category.amountMin,
+      category.amountMax,
       category.createdAt,
       category.updatedAt,
     ],
@@ -285,6 +318,23 @@ export async function updateCategory(
      WHERE id = $1`,
     [id, name, sortOrder, isActive, includeFirstPaymentInMarkup, updatedAt],
   )
+
+  if (input.amountMin !== undefined || input.amountMax !== undefined) {
+    const amounts = resolveAmountLimits(
+      input.amountMin,
+      input.amountMax,
+      existing.amountMin,
+      existing.amountMax,
+    )
+    await db.query(
+      `UPDATE product_categories
+       SET amount_min = $2,
+           amount_max = $3,
+           updated_at = $4
+       WHERE id = $1`,
+      [id, amounts.amountMin, amounts.amountMax, updatedAt],
+    )
+  }
 
   return getCategoryById(id)
 }
@@ -418,6 +468,8 @@ function toPublicCategory(category: ProductCategoryWithTerms): PublicCategoryCon
     id: category.id,
     name: category.name,
     includeFirstPaymentInMarkup: category.includeFirstPaymentInMarkup,
+    amountMin: category.amountMin,
+    amountMax: category.amountMax,
     terms,
   }
 }
